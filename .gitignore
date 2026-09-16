@@ -1,0 +1,13 @@
+.DS_Store
+.AppleDouble
+**/.DS_Store
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.log
+.idea/
+.vscode/
+# 指向旁边 fullstackopen-zh-offline 的符号链接，克隆后按 README 自行挂上
+fso-images
+
