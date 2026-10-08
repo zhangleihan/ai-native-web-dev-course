@@ -1,0 +1,15 @@
+* { box-sizing: border-box; }
+body { margin: 0; color: #193047; background: #f3f6fa; font: 17px/1.7 system-ui, sans-serif; }
+main { max-width: 960px; margin: auto; padding: 24px; }
+h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); }
+section { margin-top: 24px; }
+label { display: grid; gap: 6px; }
+input, select, button { font: inherit; padding: 9px 12px; border: 1px solid #718096; border-radius: 6px; min-width: 0; }
+button { cursor: pointer; background: #fff; color: #193047; }
+button[aria-pressed="true"] { background: #184e77; color: white; }
+:focus-visible { outline: 3px solid #b45309; outline-offset: 3px; }
+.filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: end; }
+.checkbox { display: flex; align-items: center; padding: 9px 0; }
+.cards { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,240px),1fr)); gap: 16px; }
+.cards li { background: white; border: 1px solid #c5d0db; border-radius: 10px; padding: 20px; }
+.cards h3 { margin-top: 0; }

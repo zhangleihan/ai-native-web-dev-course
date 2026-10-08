@@ -1,20 +1,17 @@
-# 项目关联
+# 项目关联：Express API：校验、资源与错误边界
 
-FSO notes：`GET/POST /api/notes`、`GET /api/notes/:id`。映射：
+## 本讲在主线中的位置
 
-| notes | FDE |
-|---|---|
-| 列表页 | `/cases`、Discover 洞察 |
-| 创建 | 领取案例、创建 Run、Accept 洞察 |
-| 单条 | `/cases/case-001`、`/api/runs/:id` |
+以独立 Express API 代替前端 fixture；已有 Next 项目可用等价路由保持相同契约。
 
-Golden Case 输入示例（将来 POST body）：
+## 最小完成范围
 
-```json
-{
-  "agentId": "agt-diag",
-  "input": "告警 ALM-20260826-0731：网元 NE-CORE-0872 …"
-}
-```
+成功创建返回 201 和 Location；非法输入 400；列表包装为 items/total；说明数组不是数据库。
 
-本讲 **先不要** 接数据库。FSO 也是先数组后 Mongo。
+通用案例契约见第 2 讲；需要平台源码时先确认当前数据入口与技术栈。这里的映射是改造建议，不是对某个未检查平台版本的现状断言。没有 FDE 仓库也可用小型案例库完成同等能力验证。
+
+## 选修拓展
+
+增加受校验的分页，明确 total 含义。
+
+拓展不增加基础评分上限，不挤占未完成的核心链路。请先完成本讲课堂验收，再决定是否扩展。

@@ -11,3 +11,12 @@ __pycache__/
 # 指向旁边 fullstackopen-zh-offline 的符号链接，克隆后按 README 自行挂上
 fso-images
 
+
+# Standalone course lab dependencies, build output and shareable env template
+labs/course-lab/node_modules/
+labs/course-lab/dist/
+!labs/course-lab/.env.example
+
+# 第4讲独立 React 入门实验
+labs/react-basics/node_modules/
+labs/react-basics/dist/

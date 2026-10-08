@@ -1,11 +1,23 @@
-# 课堂练习
+# 课堂练习：Express API：校验、资源与错误边界
 
-让 Agent 在 `web/server` 或仓库 `api/` 起 Express/FastAPI，端口 3101：
+## 输入与准备
 
-- `GET /api/cases`、`GET /api/cases/:id`（数据来自 `base.ts`）
-- `POST /api/projects/:id/runs` 收 `{agentId,input}`，回 `{id,status:"CREATED"}`
-- CORS 允许 3100
+Node/npm 与隔离练习目录；正文 server.cjs。
 
-自己跑 curl（含 `-i` 看状态码）。未知 `case-999` 必须是 404 JSON。
+## 已提供的实验骨架
 
-**出口：** 资源表没有动词路径；健康检查与案例列表可 curl。
+使用本仓库[案例库实验](labs/course-lab/README.md)，按[第5讲任务单](labs/course-lab/WORKSHEETS.md)定位对应文件。先运行参考实现并解释数据流，再完成本讲增量任务。真实数据库与Docker验证仍需要授课机具备对应环境。
+
+## 操作步骤
+
+10 分钟启动 API；15 分钟 POST 创建并 GET 查询；10 分钟发送空标题、非法难度、坏 JSON；5 分钟重启观察数据丢失。
+
+## 验收与交付
+
+成功创建返回 201 和 Location；非法输入 400；列表包装为 items/total；说明数组不是数据库。
+
+提交实现或设计产物，以及一条实际观察结果。失败时保留请求、错误信息与已排查的层级；不只提交“已完成”截图。所有实验均使用测试数据。
+
+## 出口检查
+
+对照以下能力逐项演示并解释：实现列表和创建接口；校验运行时输入；说明内存数据的生命周期。遇到环境阻断时记录阻断点并使用教师演示环境验证，明确区分亲自执行和观察演示。

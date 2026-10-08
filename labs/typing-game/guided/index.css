@@ -1,0 +1,14 @@
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1rem; color: #23352e; background: #f3f6f1; font: 1rem/1.7 system-ui, sans-serif; }
+main { max-width: 720px; margin: 2rem auto; padding: 2rem; border: 1px solid #d1dfd2; border-radius: 12px; background: white; }
+label { display: block; margin-top: 1rem; font-weight: 600; }
+input, select, button { max-width: 100%; font: inherit; padding: .6rem .8rem; border: 1px solid #849b8c; border-radius: 6px; }
+input, select { width: 100%; }
+#quote { min-height: 3rem; font-size: 1.35rem; }
+#quote span { white-space: pre-wrap; }
+.highlight { background: #fff19b; text-decoration: underline; text-underline-offset: .2em; }
+.done { color: #56705d; }
+.error { background: #fff0ed; border: 2px solid #a92e1b; }
+button { background: #285b45; color: white; cursor: pointer; }
+:focus-visible { outline: 3px solid #b97a11; outline-offset: 3px; }
+#message { font-weight: 700; }

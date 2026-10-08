@@ -1,0 +1,34 @@
+name: ai-native-case-lab
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: case_lab
+      POSTGRES_USER: case_lab
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?先运行 node scripts/init-env.mjs}
+    volumes:
+      - case-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U case_lab -d case_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      LAB_STORAGE: postgres
+      DATABASE_URL: postgres://case_lab:${POSTGRES_PASSWORD}@db:5432/case_lab
+      SESSION_SECRET: ${SESSION_SECRET:?先生成.env}
+      LAB_PASSWORD: ${LAB_PASSWORD:?先生成.env}
+      HOST: 0.0.0.0
+      PORT: 3001
+      PUBLIC_ORIGIN: http://127.0.0.1:3001
+      COOKIE_SECURE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sh", "-c", "node scripts/migrate.mjs && node scripts/seed.mjs && node server/start.mjs"]
+volumes:
+  case-data:

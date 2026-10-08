@@ -11,23 +11,23 @@ MD_DIR = ROOT / "markdown"
 DATA_DIR = ROOT / "data"
 
 LECTURES = [
-    (0, "课程介绍", "课程目标"),
+    (0, "课前导读（不另计学时）", "课程目标"),
     (1, "AI 时代的网络应用开发", "浏览器、服务器与 SPA"),
     (2, "Web 与 HTTP 原理", "HTTP GET/POST、状态码与报文头"),
-    (3, "现代前端基础", "内容、外观、行为：三块原生练习"),
+    (3, "现代前端基础", "语义、布局与事件：案例筛选"),
     (4, "React 与组件化", "组件、props、state 与列表的 key"),
     (5, "后端与 REST API", "REST 资源、Express 与 JSON 契约"),
-    (6, "数据库与数据建模", "关系表、外键、事务：从 Ontology 到 SQL"),
-    (7, "前后端集成", "fetch、CORS 与三种 UI 状态"),
+    (6, "数据库与数据建模", "约束、参数化查询与事务"),
+    (7, "前后端集成", "fetch、CORS 与请求生命周期"),
     (8, "身份认证与 Web 安全", "认证、授权、Token 与不能信任的前端"),
     (9, "实时 Web 应用", "轮询、SSE 与服务器推送"),
     (10, "测试与软件工程", "API 测试、组件测试与评测分层"),
     (11, "Docker 与部署", "镜像、Compose 与 CI 流水线"),
     (12, "AI Coding 与 Vibe Coding", "TypeScript 护栏与可验证规格"),
     (13, "LLM Web Application", "服务端模型、JSON Schema 与流式输出"),
-    (14, "Agentic Web Application", "单向数据流、工具循环与审批状态机"),
-    (15, "AI-FDE 综合项目", "路由、hooks 与可演示切片"),
-    (16, "Demo Day 与架构复盘", "把请求链讲圆：哪些线已经变实"),
+    (14, "Agentic Web Application", "工具循环、授权与审批状态机"),
+    (15, "AI-FDE 综合项目", "贯通业务链与小型评估集"),
+    (16, "Demo Day 与架构复盘", "用证据说明系统能力"),
 ]
 
 # 默认四节；第 3 讲把 JS / 花艺瓶 / 打字游戏拆成独立小节
@@ -46,23 +46,23 @@ LECTURE_0_SECTIONS = [
 ]
 
 LECTURE_3_SECTIONS = [
-    ("key", "", "内容、外观、行为：三块原生练习"),
+    ("key", "", "语义、布局与事件：案例筛选"),
     ("js", "a", "JavaScript 基础"),
-    ("terrarium", "b", "花艺瓶：HTML、CSS 与 DOM"),
-    ("typing", "c", "打字游戏：事件驱动"),
+    ("terrarium", "b", "花艺瓶：HTML、CSS、DOM 与闭包"),
+    ("typing", "c", "打字游戏：事件、状态与 DOM"),
     ("project", "d", "项目关联"),
     ("class", "e", "课堂练习"),
     ("homework", "f", "课后练习"),
 ]
 
 INTRO = """
-<p>先上 <strong>第 0 讲课程介绍</strong>（目标、大纲、考核、微信群），再进入 <strong>16 讲 × 2 学时 = 32 学时</strong>正课。目标：抓住网络应用开发的原理，用 AI Coding 把 <strong>AI-FDE 工程管理实训平台</strong>（<code>FDE-Workspace/web</code>）从 Fake Data POC 做成可持久化、可认证、可跑真实模型的系统。</p>
-<p>贯穿案例就是这个平台：登录与角色、案例库（Golden Case「通信网络故障处理」）、Discover → Eval、Agent Studio、FDE Copilot。Full Stack Open 的原理写进各讲关键内容。第 3 讲的原生练习材料在 <code>labs/js-basics</code>、<code>labs/terrarium</code>、<code>labs/typing-game</code>。</p>
-<p>每讲通常四节：关键内容（标题随讲次变化）、项目关联、课堂练习、课后练习。第 3 讲额外拆出 JavaScript、花艺瓶、打字游戏三个独立小节。</p>
+<p><strong>16 讲 × 2 学时 = 32 学时</strong>。第 0 部分为课前导读，不另占学时。以 AI-FDE 的最小业务切片或独立案例库，理解并实现现代全栈与 AI 原生应用。</p>
+<p>主线：交互页面 → 案例 API 与数据库 → 身份及权限 → 测试与交付 → 带证据的 AI 建议 → 受控工具执行。完整平台、多 Agent 和复杂基础设施为拓展。</p>
+<p>每讲包含目标、概念与示例、自检、项目关联、课堂练习、课后练习。第 3 讲另保留 JavaScript 补充与两项选修实验。模拟数据与真实服务必须明确区分。</p>
 """.strip()
 
 ATTRIBUTION = """
-课堂讲义由授课团队编写，原理部分融合赫尔辛基大学 Full Stack Open 中文版（CC BY-NC-SA 3.0，中文翻译 ZhangWei）的可教学要点。第 3 讲原生练习改编自旧课 native-web-app-dev（Web Dev for Beginners）。平台案例来自 AI-FDE 工程管理实训平台 POC。对外再分发须保留署名与相同许可。
+本教材参考 Full Stack Open 及各讲列出的官方资料；旧课实验保留原材料署名。各来源版权与许可独立，公开阅读不等于可任意再分发。详见仓库 SOURCES.md。正文按课程目标重新组织，外部链接不表示已复制全部内容。
 """.strip()
 
 
@@ -94,8 +94,10 @@ def main() -> None:
         for kind, letter, sec_title in specs:
             key = str(num) if not letter else f"{num}-{letter}"
             pages[key] = read_lecture_md(num, kind)
+            if kind == "key":
+                sec_title = (MD_DIR / f"{num:02d}-key.md").read_text(encoding="utf-8").splitlines()[0].removeprefix("# ")
             sections.append({"id": key, "letter": letter, "title": sec_title})
-        parts.append({"id": str(num), "title": title, "hours": 2, "sections": sections})
+        parts.append({"id": str(num), "title": title, "hours": 0 if num == 0 else 2, "sections": sections})
 
     payload = {
         "title": "AI 原生网络应用开发",

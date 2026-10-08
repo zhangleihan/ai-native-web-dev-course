@@ -1,0 +1,7 @@
+{
+  "name": "course-react-basics", "version": "1.0.0", "private": true,
+  "type": "module", "engines": {"node": ">=20.18"},
+  "scripts": {"build": "node scripts/build.mjs", "dev": "node scripts/build.mjs --serve", "test": "node --test tests/*.test.mjs"},
+  "dependencies": {"react": "19.3.0", "react-dom": "19.3.0"},
+  "devDependencies": {"esbuild": "0.25.12"}
+}

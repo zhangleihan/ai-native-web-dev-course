@@ -1,13 +1,67 @@
-# 单向数据流、工具循环与审批状态机
+# Agent：工具执行、审批与运行状态
 
-FSO Part 6：UI → action → reducer → 新 state → UI。FDE 的 Run 是同一形状，不必先上 Redux。POC 用 `liveRunSteps` 写死 ALM-20260826-0731；本讲要 **真的调工具**（沙箱 DB 即可）。
+## 学习目标与课前准备
 
-## 状态机
+学完本讲，应能：说明工具调用和普通文本输出的差别；设计可拒绝、可终止的执行循环；验证审批幂等
 
-`POST /runs` → RUNNING；tool span 追加；需审批 → `WAITING_APPROVAL`；POST yes/no → COMPLETED / CANCELLED。`Permission` 在服务器读库执行，忽略客户端「我已批准」。
+先修：第 8 讲权限、第 9 讲事件、第 13 讲模型边界。本讲 2 学时，按每学时 45 分钟安排：回顾与问题导入 10 分钟、概念和示例 30 分钟、课堂练习 40 分钟、讲评与出口检查 10 分钟。课后练习时间不计入 32 学时。
 
-双 Agent：`DiagnosisAgent` 无建单权；`OperationsAgent` 的 `create_work_order` 为 `APPROVAL_REQUIRED`。诊断 Agent 即使在 instructions 里想建单，服务器也拒绝。
 
-## Harness 时序
+## 什么变化使应用成为 Agent
 
-Context Build（pinned 四条项目规则）→ 模型 tool_call → 服务器执行并写 span → … → 建单停审批 → 通过才 insert WorkOrder。`DENY` 的工具 span 为 error。Run 结束抽出的 Memory 须人工确认（`decideMemoryCandidate`）。
+固定工作流由代码预先决定步骤；Agent 允许模型依据反馈动态选择下一步。模型提出工具名和参数，**应用负责校验、授权与执行**。本课只需一个 Agent、一个只读工具 `search_cases` 和一个写工具 `create_work_order`，无需多 Agent 编排框架。
+
+Harness 指承载执行的运行环境：构建上下文、调模型、分派工具、限制预算、保存轨迹、处理失败和恢复。它不是提示词的别名。
+
+## 有边界的循环（伪代码）
+
+```text
+创建 run，状态 RUNNING，绑定发起者
+最多执行 5 轮，且不超过总时间/预算：
+  读取授权上下文，调用模型
+  若有最终回答：保存结果，COMPLETED，结束
+  若工具未知、参数非法或权限 DENY：记录拒绝，不执行
+  若需要审批：保存准确的工具名/参数/版本，WAITING_APPROVAL，暂停
+  否则：执行允许工具，记录结果，反馈给模型
+达到限制：FAILED，记录停止原因
+```
+
+工具结果也属于外部输入，不能被当作新系统指令。不要给模型任意 shell 或整库写入权限来代替窄工具接口。
+
+## 审批允许继续，不代表已经成功
+
+```text
+RUNNING → WAITING_APPROVAL
+WAITING_APPROVAL --批准且仍获授权--> RUNNING → 执行成功 → COMPLETED
+                                           └执行失败→ FAILED
+WAITING_APPROVAL --拒绝/取消--> CANCELLED
+```
+
+服务器读取当前 run、审批人身份及权限，校验被批准的参数未被替换。普通用户不能靠发送 `approved:true` 自我提升权限。DENY 不能被审批绕过；权限变化后需要重新检查。
+
+在单个数据库事务中锁定待审批记录，更新状态并用唯一请求 id 创建沙箱工单。重复批准返回已有结果或明确冲突，不再创建第二张工单。调用外部服务时需业务幂等与补偿，数据库事务不能撤回外部动作。
+
+## 轨迹、MCP 与记忆的边界
+
+核心只保存必要轨迹：run id、操作者、时间、工具名、经脱敏参数、结果和失败原因；不要求保存模型隐藏推理。轨迹用于调试和评价，不是把所有日志无差别存成“记忆”。
+
+MCP 是连接 AI 应用与外部能力的协议体系，含 host/client/server 等角色；它不自动授予工具权限，也不替代业务授权。课堂理解一个工具如何映射到 MCP 即可，完整远程服务器接入列为选做。
+
+短期上下文服务于当前 run；跨 run 的长期记忆涉及来源、权限、更新和删除。若做记忆拓展，先形成可审阅候选，由用户确认后保存，不把每次模型猜测直接写成永久事实。
+
+
+## 自检与参考答案
+
+**问题：** 用户连续点击两次“批准”，应该依靠禁用按钮避免重复建单吗？
+
+<details><summary>完成思考后查看参考答案</summary>
+
+按钮禁用只能减少误操作。服务器必须检查当前状态，并用事务及唯一幂等标识保证重复请求不会产生第二张工单。
+
+</details>
+
+## 阅读定位
+
+[Anthropic：Building effective agents](https://www.anthropic.com/engineering/building-effective-agents)；[MCP 官方架构说明](https://modelcontextprotocol.io/docs/learn/architecture)。动态 SDK 与协议细节以接入时官方版本为准。
+
+必读范围是本讲正文；参考材料用于查漏补缺，不要求通读整门外部课程。课堂练习与课后练习见本讲后续小节。

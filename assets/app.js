@@ -23,7 +23,9 @@
   marked.setOptions({ gfm: true, breaks: false });
 
   function currentRoute() {
-    const hash = decodeURIComponent(location.hash.replace(/^#/, "") || "/");
+    let hash;
+    try { hash = decodeURIComponent(location.hash.replace(/^#/, "") || "/"); }
+    catch { return { type: "home" }; }
     const parts = hash.split("/").filter(Boolean);
     if (parts[0] !== "part") return { type: "home" };
     return { type: "page", id: parts.slice(1).join("-") };
@@ -35,8 +37,8 @@
         const open = part.sections.some((section) => section.id === activeId);
         return `
           <div class="part ${open ? "open active-part" : ""}" data-part="${part.id}">
-            <button class="part-toggle" type="button">
-              <span class="part-index">第 ${part.id} 讲</span>
+            <button class="part-toggle" type="button" aria-expanded="${open}">
+              <span class="part-index">${part.id === "0" ? "导读" : `第 ${part.id} 讲`}</span>
               <span class="part-title">${part.title}</span>
             </button>
             <div class="sections">
@@ -69,7 +71,7 @@
             .map(
               (part) => `
                 <a class="part-card" href="#/part/${part.id}">
-                  <strong>第 ${part.id} 讲 · ${part.hours || 2} 学时</strong>
+                  <strong>${part.id === "0" ? "课前导读" : `第 ${part.id} 讲`} · ${part.hours ?? 2} 学时</strong>
                   ${part.title}
                 </a>
               `
@@ -89,8 +91,8 @@
     const index = allSections.findIndex((item) => item.id === route.id);
     const prev = allSections[index - 1];
     const next = allSections[index + 1];
-    const heading = `<h1>第 ${current.partId} 讲 · ${current.title}</h1>`;
-    const pageLabel = (item) => `第 ${item.partId} 讲 ${item.title}`;
+    const heading = `<h1>${current.partId === "0" ? "课前导读" : `第 ${current.partId} 讲`} · ${current.title}</h1>`;
+    const pageLabel = (item) => `${item.partId === "0" ? "课前导读" : `第 ${item.partId} 讲`} ${item.title}`;
 
     return `
       ${heading}
@@ -124,12 +126,21 @@
     } else {
       const current = allSections.find((item) => item.id === route.id);
       crumbEl.textContent = current
-        ? `第 ${current.partId} 讲 / ${current.title}`
+        ? `${current.partId === "0" ? "课前导读" : `第 ${current.partId} 讲`} / ${current.title}`
         : "课程内容";
       document.title = current
         ? `${current.title} · AI 原生网络应用开发`
         : "AI 原生网络应用开发 · 32 学时教材";
     }
+    contentEl.querySelectorAll("table").forEach(table => {
+      const wrap = document.createElement("div");
+      wrap.className = "table-scroll";
+      wrap.tabIndex = 0;
+      wrap.setAttribute("role", "region");
+      wrap.setAttribute("aria-label", "可横向滚动的表格");
+      table.replaceWith(wrap);
+      wrap.append(table);
+    });
     contentEl.focus({ preventScroll: true });
     const scroller = document.getElementById("content-scroll");
     if (scroller) scroller.scrollTop = 0;
@@ -138,20 +149,47 @@
   tocEl.addEventListener("click", (event) => {
     const button = event.target.closest(".part-toggle");
     if (!button) return;
-    button.parentElement.classList.toggle("open");
+    const open = button.parentElement.classList.toggle("open");
+    button.setAttribute("aria-expanded", String(open));
   });
 
-  toggleBtn.addEventListener("click", () => {
-    layoutEl.classList.toggle("sidebar-collapsed");
-    localStorage.setItem(
-      "aiweb-sidebar-collapsed",
-      layoutEl.classList.contains("sidebar-collapsed") ? "1" : "0"
-    );
-  });
-
-  if (localStorage.getItem("aiweb-sidebar-collapsed") === "1") {
-    layoutEl.classList.add("sidebar-collapsed");
+  const narrow = () => window.matchMedia("(max-width: 860px)").matches;
+  function setCollapsed(collapsed) {
+    layoutEl.classList.toggle("sidebar-collapsed", collapsed);
+    toggleBtn.setAttribute("aria-expanded", String(!collapsed));
+    toggleBtn.setAttribute("aria-label", collapsed ? "展开目录" : "折叠目录");
+    document.getElementById("sidebar").inert = collapsed;
   }
+  let preference = null;
+  try { preference = localStorage.getItem("aiweb-sidebar-collapsed"); } catch {}
+  setCollapsed(narrow() || preference === "1");
+  toggleBtn.addEventListener("click", () => {
+    const collapsed = !layoutEl.classList.contains("sidebar-collapsed");
+    setCollapsed(collapsed);
+    try { localStorage.setItem("aiweb-sidebar-collapsed", collapsed ? "1" : "0"); } catch {}
+  });
+  tocEl.addEventListener("click", event => {
+    if (narrow() && event.target.closest("a")) setCollapsed(true);
+  });
+  window.matchMedia("(max-width: 860px)").addEventListener("change", event => {
+    if (event.matches) setCollapsed(true);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && narrow()) {
+      setCollapsed(true);
+      toggleBtn.focus();
+    }
+  });
+  document.getElementById("print-page").addEventListener("click", () => window.print());
+  let closedAnswers = [];
+  window.addEventListener("beforeprint", () => {
+    closedAnswers = [...contentEl.querySelectorAll("details:not([open])")];
+    closedAnswers.forEach(item => { item.open = true; });
+  });
+  window.addEventListener("afterprint", () => {
+    closedAnswers.forEach(item => { item.open = false; });
+    closedAnswers = [];
+  });
 
   contentEl.addEventListener("click", (event) => {
     const link = event.target.closest("a");
@@ -160,8 +198,7 @@
     const match = href.match(/^\/(?:en|zh)\/part(\d+)(?:\/([^#]*))?/);
     if (!match) return;
     event.preventDefault();
-    const part = match[1];
-    location.hash = `#/part/${part}`;
+    window.location.assign(`https://fullstackopen.com${href}`);
   });
 
   window.addEventListener("hashchange", render);

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>打字游戏 · 分步教学参考</title>
+  <link rel="stylesheet" href="./index.css">
+  <script src="./index.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>逐词打字练习</h1>
+    <p id="instructions">点击开始。每个非末尾单词输入正确后按空格；最后一个单词输入完整即可结束。区分大小写和标点。</p>
+    <label for="quote-choice">练习句子</label>
+    <select id="quote-choice">
+      <option value="random">随机练习</option>
+      <option value="0">固定短句：We build web apps.</option>
+      <option value="1">固定短句：Small steps make progress.</option>
+      <option value="2">固定短句：Read code and test ideas.</option>
+    </select>
+    <p id="quote" lang="en"></p>
+    <label for="typed-value">当前单词</label>
+    <input id="typed-value" type="text" disabled autocomplete="off" spellcheck="false" autocapitalize="off" aria-describedby="instructions feedback">
+    <p id="feedback" role="status">请先开始游戏。</p>
+    <p id="message" role="status"></p>
+    <button id="start" type="button">开始 / 重新开始</button>
+  </main>
+</body>
+</html>

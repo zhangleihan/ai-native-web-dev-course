@@ -1,23 +1,65 @@
-# TypeScript 护栏与可验证规格
+# AI Coding：规格、类型与人工验收
 
-FSO Part 9 在已有 TS 代码库里加功能：类型、linter、不要 `any`。Vibe Coding 不是 FSO 原文；本课原则是：**规格可验证、小步、diff 受控**。类型就是让 Agent 少胡写的护栏。
+## 学习目标与课前准备
 
-## 坏规格 vs 好规格
+学完本讲，应能：把任务写成可验证规格；审查 AI 生成的变更；区分 TypeScript 类型与运行时数据校验
 
-坏：「优化案例库。」
+先修：能独立解释第 5–10 讲的核心代码。本讲 2 学时，按每学时 45 分钟安排：回顾与问题导入 10 分钟、概念和示例 30 分钟、课堂练习 40 分钟、讲评与出口检查 10 分钟。课后练习时间不计入 32 学时。
 
-好：
+
+## AI 参与实现，人负责需求和证据
+
+本课将 Vibe Coding 理解为通过自然语言快速探索原型的工作方式，而非免除理解和验证的理由。原型可帮助发现需求；纳入主线前必须读懂改动、检查依赖、运行测试并确认权限边界。工具名称和模型版本会变化，方法应可迁移。
+
+一个可靠的小循环是：复现问题 → 写验收条件 → 限定修改范围 → 生成小改动 → 阅读 diff → 执行检查 → 保留或撤回。每轮只改变一个清晰行为，避免一句“优化整个系统”产生无法评审的大量文件。
+
+## 可直接使用的任务规格
 
 ```text
-cases/page.tsx 筛选同步到 ?industry=&difficulty=&q=
-刷新后筛选仍在。用 useSearchParams。
-不要改 mock，不要改其他页布局。
-验收：/cases?industry=通信运营 只显示该类。
-跑 npm run typecheck。
+背景：案例列表已经支持 industry 筛选。
+任务：增加 difficulty 筛选，取 beginner/intermediate/advanced。
+约束：保持 GET /api/cases 的 {items,total} 响应；沿用现有技术栈。
+范围：API 校验与查询、现有筛选组件、相关测试。
+验收：组合条件同时生效；非法值返回 400；空结果返回 200；清空恢复结果。
+交付：解释修改原因、运行的检查及尚未验证的部分。
 ```
 
-FSO 练习也是可验证的（页面出现某元素、API 返回某 JSON）。把这种口吻写进 Agent 提示。
+先让自己写出测试输入和预期，再看 AI 是否实现这些条件。生成的运行日志、截图说明或“测试通过”文字不等于实际执行证据。
 
-## 禁止
+## 类型提供什么保护
 
-不要剧透 Golden Case 隐藏信息；不要删 Store 却不接 API；不要客户端密钥；不要 `dangerouslySetInnerHTML`。一次一个意图，越权重构 `AppShell` 必须回绝。
+```typescript
+type Difficulty = 'beginner' | 'intermediate' | 'advanced';
+type CaseItem = {id: string; title: string; industry: string; difficulty: Difficulty};
+function titleOf(item: CaseItem): string { return item.title; }
+```
+
+TypeScript 能检查调用方静态使用是否符合声明；类型在运行时被擦除。`await response.json() as CaseItem` 不会验证服务器真的返回这些字段。API 边界先按 unknown 接收，再使用 schema 校验或显式类型守卫；校验通过后再进入可信业务代码。
+
+无需为了本讲把整个旧项目改写为 TypeScript。选一个边界函数迁移，比较编译器发现的错误与仍需运行时检查的错误。
+
+## 代码审查的四个问题
+
+1. 修改是否真正满足验收，还是只改了界面文字？
+2. 是否引入不必要依赖、复制代码、硬编码 URL 或密钥？
+3. 异常和权限分支是否与成功分支同样清楚？
+4. 测试失败时能否解释原因，而不是反复要求 AI “修到全绿”？
+
+在作业中记录采用或拒绝的一项 AI 建议、理由及验证命令。不要求上传私人对话或敏感数据。未使用 AI 的学生用同样格式记录一次人工设计决策。
+
+
+## 自检与参考答案
+
+**问题：** 给模型更大的上下文是否一定带来更好的实现？
+
+<details><summary>完成思考后查看参考答案</summary>
+
+不一定。过时、无关或相互冲突的信息会干扰实现。先提供相关契约、关键文件、约束和可验证示例，再按需要补充。
+
+</details>
+
+## 阅读定位
+
+[Full Stack Open Part 9：TypeScript](https://fullstackopen.com/en/part9/)；本讲的规格与验收流程为课程实践建议，不依赖特定商业工具。
+
+必读范围是本讲正文；参考材料用于查漏补缺，不要求通读整门外部课程。课堂练习与课后练习见本讲后续小节。

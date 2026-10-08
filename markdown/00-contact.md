@@ -11,11 +11,9 @@
 
 群用于通知、答疑、报分组。不要在群里发密钥、成绩单或他人作业。
 
-## GitHub 账号
+## 作业提交方式
 
-请在在线文档中填写 GitHub 账号，便于作业仓库与评阅：
-
-[填写 GitHub 账号信息](https://docs.qq.com/sheet/DRlllUFFDRUxybUhD?tab=BB08J2)
+在北邮-云邮教学空间中按布置要求完成作业提交。
 
 ## 开发环境
 

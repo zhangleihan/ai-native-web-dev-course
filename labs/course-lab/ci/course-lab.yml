@@ -1,0 +1,18 @@
+# 将本文件放到仓库根 .github/workflows/course-lab.yml 后启用。
+name: Course lab checks
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: labs/course-lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: labs/course-lab/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run check

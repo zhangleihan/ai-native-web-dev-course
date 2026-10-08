@@ -1,25 +1,19 @@
-# 课后练习
+# 课后练习：现代前端基础：语义、布局与事件
 
-练习不要提交进 `FDE-Workspace/web/src`。可在 `labs/` 旁建自己的文件夹，或复制一份 `labs/terrarium` / `labs/typing-game` 再改。
+## 必做（建议 30–60 分钟）
 
-## 1. 花艺瓶做完
+整理 HTML/CSS/JS 为三个文件，保留两条测试数据；记录一次布局问题的 Computed 证据。
 
-按 `labs/terrarium` 三节：HTML 列植物（**每张图不同的 alt**）→ CSS 层叠/选择器/左右栏定位 → `script.js` 闭包拖拽。对照 `labs/terrarium/solution/`，但要能讲解 `pos1…pos4` 和为什么松手要 `onpointermove = null`。
+## 提交内容
 
-## 2. 打字游戏做完
+通过北邮云邮教学空间，按教师发布的任务提交代码或仓库信息、复现步骤和验证证据。使用 AI 时简述它参与的范围、你检查的内容与一次修正；不提交真实密钥或私人对话。未使用 AI 则说明人工决策过程。
 
-自建三文件（可从 `labs/typing-game/solution/` 起步再重写）。`click` 开始、`input` 校验、高亮当前词、打错变红、完成显示秒数。句子用 `textContent`/`createElement` 更佳；若用了 `innerHTML`，NOTES 写清句子源为何安全、接接口后为何不行。
+## 自评标准
 
-加一项：结束时移除 `input` 监听或禁用输入框；或 `localStorage` 存最短用时。
+- 能复现本讲的核心行为，而非仅能打开页面。
+- 能解释一项输入、输出或失败边界。
+- 证据与实现一致，尚未验证的部分明确标注。
 
-## 3. js-basics 书面题
+## 选做（不要求全部完成）
 
-想象购物车字段（商品 id、名、单价、数量、是否折扣）。列出 JS 类型及为什么数量用 `number`（见 `labs/js-basics/1-data-types/translations/assignment.zh-cn.md`）。再写 10 行：`map`/`filter` 如何对应案例库列表。
-
-## 4. 案例卡片静态页（接到 FDE）
-
-`cases.html` + `cases.json`（从 `FDE-Workspace/web/src/mock/base.ts` 抄 `cases`）。`fetch` + `res.ok`；失败可见；`textContent` 填标题摘要；过滤函数与课堂 `filterCases` 同构；至少展示 `case-001`。
-
-## 5. 无障碍 NOTES
-
-整卡 `onClick`、登录密码框：键盘能否到达。准备第 4 讲改成 `Button`/`Link`。
+花艺瓶或打字游戏二选一；说明它复用了哪个事件/状态概念。

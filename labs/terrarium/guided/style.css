@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; color: #263c32; background: #f5f7f2; }
+h1, #instructions { text-align: center; }
+.stage-scroll { overflow-x: auto; padding: .5rem; }
+#page { position: relative; width: 100%; min-width: 620px; max-width: 1000px; height: 640px; margin: auto; border: 1px solid #bdd0c1; background: white; isolation: isolate; }
+.container { position: absolute; top: 0; width: 17%; height: 100%; padding: 10px; background: #e8eee8; }
+#left-container { left: 0; }
+#right-container { right: 0; }
+.plant-holder { position: relative; height: 14%; }
+.plant { position: absolute; top: 0; left: 0; width: 100%; height: 105%; object-fit: contain; z-index: 3; cursor: grab; touch-action: none; user-select: none; }
+.plant:focus-visible { outline: 3px solid #a26300; outline-offset: 2px; }
+.plant.dragging { cursor: grabbing; z-index: 4; }
+#terrarium { position: absolute; inset: 0; pointer-events: none; }
+.jar-walls { position: absolute; left: 22%; bottom: 3%; width: 56%; height: 78%; border: 3px solid #a6c6c3; border-radius: 12%; background: rgb(190 220 216 / 45%); z-index: 2; }
+.jar-top { position: absolute; left: 27%; bottom: 81%; width: 46%; height: 4%; border-radius: 8px; background: #c4dad5; z-index: 2; }
+.jar-bottom { position: absolute; left: 27%; bottom: 2%; width: 46%; height: 2%; border-radius: 8px; background: #9ab9b0; z-index: 2; }
+.dirt { position: absolute; left: 24%; bottom: 4%; width: 52%; height: 8%; border-radius: 0 0 3rem 3rem; background: #785940; z-index: 1; }
+.jar-glossy-long, .jar-glossy-short { position: absolute; left: 6%; width: 3%; border-radius: 1rem; background: #fff; }
+.jar-glossy-long { bottom: 18%; height: 22%; }
+.jar-glossy-short { bottom: 44%; height: 8%; }

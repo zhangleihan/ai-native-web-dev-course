@@ -1,26 +1,17 @@
-# 项目关联
+# 项目关联：现代前端基础：语义、布局与事件
 
-本讲有 **两条线**：`labs/` 里三个小项目练肌肉；FDE 案例库是这些肌肉将来要长到哪。
+## 本讲在主线中的位置
 
-## 动手目录（已在本课程仓库）
+案例卡片是主练习；旧课花艺瓶和打字游戏帮助复习同一组 DOM 概念，不替代主线。
 
-| 项目 | 打开 | 对应能力 |
-|---|---|---|
-| JS 基础 | 浏览器 Console，对照 `labs/js-basics/*/translations/README.zh-cn.md` | `CaseItem` 的类型与 `filter` |
-| 花艺瓶 | `labs/terrarium/solution/index.html` 或从 `1-intro-to-html` 自搭 | 语义 HTML、选择器、定位、DOM 闭包 |
-| 打字游戏 | `labs/typing-game/solution/` 或自建三文件 | `click`/`input`、当前词与计时 |
+## 最小完成范围
 
-植物图：`labs/terrarium/solution/images/`。课堂不要改 FDE 的 `web/src` 来做花艺瓶。
+关键词与行业组合生效；无匹配有提示；输入有 label；Tab 可达；用户文本不被解析成标签。
 
-若用本教材的静态服务（8766），成品地址例如：
+通用案例契约见第 2 讲；需要平台源码时先确认当前数据入口与技术栈。这里的映射是改造建议，不是对某个未检查平台版本的现状断言。没有 FDE 仓库也可用小型案例库完成同等能力验证。
 
-- http://127.0.0.1:8766/labs/terrarium/solution/index.html
-- http://127.0.0.1:8766/labs/typing-game/solution/index.html
+## 选修拓展
 
-## FDE 上的落点
+花艺瓶或打字游戏二选一；说明它复用了哪个事件/状态概念。
 
-`CaseItem` 每个字段都要在 `/cases` UI 上找得到。筛选只存在该页 `useState`，刷新会丢。
-
-登录页密码框是非受控装饰，对照打字游戏里「输入框的 `value` 必须被 JS 读到」——FDE 现在读都没读。
-
-第 4 讲 React 会把 `getElementById` + 改 `className` 换成组件 state；你必须还能说出底层发生了什么。
+拓展不增加基础评分上限，不挤占未完成的核心链路。请先完成本讲课堂验收，再决定是否扩展。

@@ -1,22 +1,64 @@
-# 认证、授权、Token 与不能信任的前端
+# 认证与授权：把信任边界放在服务端
 
-FSO Part 4c/4d 做用户管理与 token；Part 5a 把登录接到前端。核心句：**浏览器里的一切都可被改掉。** FDE 的 `setRole` 是这句话的活标本。
+## 学习目标与课前准备
 
-## 认证 vs 授权
+学完本讲，应能：区分身份认证与资源授权；保护案例写操作；通过负向请求验证权限
 
-- 认证：你是林知远还是陈老师（`POST /api/auth/login` 校验密码哈希）
-- 授权：学生不能进案例设计器；`create_work_order` 对 OperationsAgent 是 `APPROVAL_REQUIRED`（**工具权限**，另一张表）
+先修：第 6–7 讲的数据与集成；使用隔离测试账号。本讲 2 学时，按每学时 45 分钟安排：回顾与问题导入 10 分钟、概念和示例 30 分钟、课堂练习 40 分钟、讲评与出口检查 10 分钟。课后练习时间不计入 32 学时。
 
-POC 两件事都在前端。登录应变成用户名/密码受控表单，去掉用 Segmented 当认证。`GET /api/me` 后按角色不渲染 Admin 菜单，**路由 API 也要 403**。
 
-## Token 流程（FSO 映射）
+## 先回答“是谁”，再回答“可否操作”
 
-notes：登录 → 服务器发 token → 后续 `Authorization: Bearer`。FDE 推荐 Cookie：`HttpOnly; Secure; SameSite=Lax`。localStorage 里的 JWT 可被 XSS 偷走。
+认证识别当前用户；授权决定该用户对该资源能做什么。前端隐藏按钮改善体验，不能阻止 curl 直接发送请求。用户 id 和 role 必须来自经过验证的会话，不从请求 body 采信。
 
-## 四角色
+本课采用服务端会话作为讲解路径：登录验证密码 → 生成随机会话标识 → 浏览器保存 cookie → 后续请求由服务器加载会话 → 路由检查权限。使用成熟的密码散列与会话库，不手写密码算法；生产会话存储不能只依赖默认内存存储。JWT 为比较阅读，不要求同时实现两套登录。
 
-student 只能碰自己的项目；teacher 评分与看 Trace；mentor 反馈；admin 模型与资源。顶栏「切换角色」必须消失。
+## 一张最小权限表
 
-## XSS / CSRF / 注入
+| 操作 | 未登录 | 普通用户 | 管理员 |
+|---|---|---|---|
+| 读取公开案例 | 允许 | 允许 | 允许 |
+| 创建自己的案例 | 401 | 允许 | 允许 |
+| 修改他人的案例 | 401 | 403 | 允许 |
+| 批准练习工单 | 401 | 403 | 按请求状态再检查 |
 
-React 默认转义。危险：Copilot Markdown HTML、`dangerouslySetInnerHTML`、访谈原文进提示词。Cookie 会话要 SameSite 或 CSRF 头。SQL 必须参数化。模型密钥只放服务器，禁止 `NEXT_PUBLIC_` 前缀。
+存在但不允许访问的资源可按产品策略返回 403 或隐藏存在性的 404，必须一致。仅检查“已登录”会造成对象级越权。
+
+以下是已有身份中间件后的一段授权伪代码，不是完整登录实现：
+
+```javascript
+if (!req.user) return unauthorized();
+const item = await findCase(req.params.id);
+if (!item) return notFound();
+if (item.ownerId !== req.user.id && req.user.role !== 'admin') return forbidden();
+// 之后才允许更新，且字段使用允许列表。
+```
+
+## Cookie、XSS 与 CSRF
+
+HttpOnly 减少脚本直接读取 cookie 的机会，Secure 使 cookie 仅随 HTTPS 发送，SameSite 限制部分跨站携带场景。它们不能消除 XSS，也不能单独替代完整的 CSRF 设计。带 cookie 的写请求按采用的框架实施 CSRF token 或等价的可靠防护，并校验来源；不能只添加一个未经验证的自定义 Header。
+
+不可信文本按文本渲染；确需富文本使用经过维护的清洗方案。密码与 API key 不进入日志和仓库。JWT 的签名通常不加密 payload，不能把秘密放进去；签名校验之外还要检查过期、签发者等约束。
+
+## 安全也是可测试行为
+
+测试 A、B 两个普通用户和一个管理员。A 能修改自己的案例，不能修改 B 的；伪造 body 中 `role: 'admin'` 不应成功；退出后原会话不可继续写入。记录状态码及数据库未被修改的证据，不以按钮消失作为验收。
+
+课堂只要求集成教师或现有项目提供的登录骨架并完成授权，不在 40 分钟内从零实现密码找回、邮件验证和单点登录。
+
+
+## 自检与参考答案
+
+**问题：** 学生把请求里的 role 改成 admin，服务器应怎样判断？
+
+<details><summary>完成思考后查看参考答案</summary>
+
+忽略客户端声称的角色，从有效会话加载用户及服务端角色，再检查资源归属和操作权限。
+
+</details>
+
+## 阅读定位
+
+[Full Stack Open Part 4：用户管理与登录](https://fullstackopen.com/en/part4/)；会话实现按所用框架官方安全说明执行。
+
+必读范围是本讲正文；参考材料用于查漏补缺，不要求通读整门外部课程。课堂练习与课后练习见本讲后续小节。
