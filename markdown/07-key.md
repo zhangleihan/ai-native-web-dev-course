@@ -73,3 +73,7 @@ loading 展示文字或进度；success 且 items 非空显示列表；success �
 [Full Stack Open Part 2：与服务器通信](https://fullstackopen.com/zh/part2/) 和 [Part 3：前后端连接](https://fullstackopen.com/zh/part3/)。
 
 必读范围是本讲正文；参考材料用于查漏补缺，不要求通读整门外部课程。课堂练习与课后练习见本讲后续小节。
+
+## 可选对照：Next.js 应用中的同一条数据链
+
+第4讲[Next.js 拓展](#/part/4/e)提供服务端页面、客户端组件和只读 Route Handler。对照本讲 Effect 请求方案，先确认数据从哪里获取、哪里拥有状态，以及失败由哪里展示。配套页面仍使用初始数组，未接入 GET；若选做接入，应实现本讲的加载/错误/空结果处理，并说明本地新增为何未入库。

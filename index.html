@@ -5,23 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI 原生网络应用开发 · 32 学时教材</title>
     <link rel="stylesheet" href="vendor/github.min.css" />
-    <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="stylesheet" href="assets/styles.css?v=20261015-sidebar" />
   </head>
   <body>
     <div id="app" class="layout">
+      <div class="sidebar-shell">
+        <div class="sidebar-toolbar">
+          <button id="toggle-sidebar" class="icon-btn" type="button" aria-label="收起目录" title="收起目录" aria-controls="sidebar" aria-expanded="true">
+            <svg class="sidebar-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path class="sidebar-toggle-arrow" d="m16 9-3 3 3 3"/></svg>
+            <span class="sidebar-toggle-label">收起目录</span>
+          </button>
+        </div>
       <aside id="sidebar" class="sidebar">
         <div class="sidebar-head">
           <a class="brand" href="#/">AI 原生 Web</a>
-          <p class="brand-sub">32 学时 · FDE 平台贯穿案例</p>
+          <p class="brand-sub">16 讲 · 32 学时</p>
         </div>
         <nav id="toc" class="toc" aria-label="课程目录"></nav>
       </aside>
+      </div>
 
       <div class="main-wrap">
         <header class="topbar">
-          <button id="toggle-sidebar" class="icon-btn" type="button" aria-label="折叠目录" aria-controls="sidebar" aria-expanded="true">
-            ☰
-          </button>
           <div id="crumb" class="crumb">课程内容</div>
           <button id="print-page" class="print-btn" type="button">打印本节</button>
         </header>
@@ -33,7 +38,7 @@
 
     <script src="vendor/marked.min.js"></script>
     <script src="vendor/highlight.min.js"></script>
-    <script src="data/course.js?v=20261007"></script>
-    <script src="assets/app.js"></script>
+    <script src="data/course.js?v=20261015-intro"></script>
+    <script src="assets/app.js?v=20261015-sidebar"></script>
   </body>
 </html>

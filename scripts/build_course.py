@@ -82,6 +82,12 @@ def sections_spec(num: int, key_title: str) -> list[tuple[str, str, str]]:
     out = []
     for kind, letter, title in DEFAULT_KINDS:
         out.append((kind, letter, key_title if title is None else title))
+    if num == 4:
+        out.extend([
+            ("react-guide", "d", "React 官方教程与状态设计练习"),
+            ("nextjs", "e", "Next.js：路由与服务端/客户端边界"),
+            ("antd", "f", "Ant Design：表格、表单与组件协作"),
+        ])
     return out
 
 

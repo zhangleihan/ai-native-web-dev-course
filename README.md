@@ -30,3 +30,7 @@ cd ai-native-web-dev-course
 - [本次修订说明](REVISION_NOTES.md)：删减、补充、修正与验证范围。
 
 用户已有 `labs/exercise/`、`mypage.html` 及教师联系页不属于本次改写范围。教材不是完整生产系统；明确标注的代码片段与伪代码需要放入实验骨架，真实模型与云部署按条件选做。
+
+## React / Next.js / Ant Design 拓展
+
+第4讲新增三个网页小节：React 官方教程与状态设计、Next.js App Router、Ant Design 表格与表单。独立实验见 [Next.js + Ant Design 案例管理](labs/next-antd-basics/README.md)。保留原基础实验，拓展内容不增加32学时；从课程网页第4讲目录访问。

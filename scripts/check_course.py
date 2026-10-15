@@ -11,7 +11,8 @@ def main():
     errors = []
     raw = (ROOT / 'data/course.js').read_text()
     data = json.loads(raw.removeprefix('window.COURSE_DATA = ').strip().removesuffix(';'))
-    if len(data['pages']) != 71: errors.append('Expected 71 pages')
+    expected_pages = sum(len(sections_spec(n, title)) for n, _, title in LECTURES)
+    if len(data['pages']) != expected_pages: errors.append(f'Expected {expected_pages} pages')
     if sum(p['hours'] for p in data['parts']) != 32: errors.append('Hours must total 32')
     if data['parts'][0]['hours'] != 0: errors.append('Orientation must not add hours')
     ids = [s['id'] for p in data['parts'] for s in p['sections']]
@@ -41,6 +42,6 @@ def main():
         if not parsed.scheme and parsed.path and not (ROOT/parsed.path).exists(): errors.append(f'index: missing {link}')
     if errors:
         print('\n'.join(errors)); return 1
-    print(f'PASS: 71 pages, 32 hours, 16 learning/self-check sections, {checked_links} local content links, generated data matches source')
+    print(f'PASS: {expected_pages} pages, 32 hours, 16 learning/self-check sections, {checked_links} local content links, generated data matches source')
     return 0
 if __name__ == '__main__': sys.exit(main())

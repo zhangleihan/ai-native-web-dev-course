@@ -20,3 +20,8 @@ labs/course-lab/dist/
 # 第4讲独立 React 入门实验
 labs/react-basics/node_modules/
 labs/react-basics/dist/
+
+# Next.js 教学实验的本地依赖和构建产物
+labs/next-antd-basics/node_modules/
+labs/next-antd-basics/.next/
+labs/next-antd-basics/out/

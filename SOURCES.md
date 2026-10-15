@@ -25,3 +25,13 @@
 React 官方资料通过 [Learn React](https://react.dev/learn) 核对；本讲各概念旁给出具体页面，重点包括组件、JSX、props、事件、状态快照、更新队列、列表、不可变更新、状态共享与 Thinking in React。仅链接与概念参考，没有抓取镜像全文；官方文档及代码各自版权和许可继续适用。
 
 `labs/react-basics` 为本课程新增案例示例，用静态卡片、搜索、筛选与收藏展示同一业务逐步演进。React/React DOM/esbuild 的依赖许可分别适用，package-lock.json 固定当前安装版本。本次不为整个课程仓库指定新许可证。
+
+## React / Next.js / Ant Design 补充（2026-10-14）
+
+| 官方来源 | 引入位置与用途 | 使用方式 |
+|---|---|---|
+| [React Learn](https://react.dev/learn)、[状态结构](https://react.dev/learn/choosing-the-state-structure)、[状态保留与重置](https://react.dev/learn/preserving-and-resetting-state) | 第4讲 d：组件基础阅读路线、选择记录与编辑草稿 | 链接、阅读任务与课程原创案例，不镜像全文 |
+| [Next.js React Foundations](https://nextjs.org/learn/react-foundations)、[App Router 文档](https://nextjs.org/docs/app) | 第4讲 e：页面、布局、服务端/客户端边界、Route Handler；衔接第7讲 | 官方公开教程定向引用，例子围绕本课程案例库编写 |
+| [Ant Design React](https://ant.design/docs/react/introduce-cn)、[Form](https://ant.design/components/form-cn)、[Table](https://ant.design/components/table-cn)、[Next.js 集成](https://ant.design/docs/react/use-with-next-cn) | 第4讲 f：受控筛选、表格、表单、首屏样式 | 引用 API 与集成方法，不复制完整文档或图片 |
+
+原文版权及各项目许可独立适用，公开访问不意味着整套教程可任意再分发。配套实验依赖版本与锁文件见 labs/next-antd-basics，未将这些机构标注为本课程作者或背书方。FSO 离线原文继续复用原目录，没有重复下载。

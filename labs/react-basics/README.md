@@ -25,6 +25,10 @@ python3 -m http.server 5175 --bind 127.0.0.1 --directory dist
 
 最后一条是独立构建预览的可选方式，访问 http://127.0.0.1:5175 。不要双击 JSX，也不要直接打开尚未构建的根 index.html。
 
+## 构建工具从哪里来
+
+`scripts/build.mjs` 是本课程编写并随仓库提供的 Node.js 构建脚本，不由 npm ci 自动生成。.mjs 明确表示 ES Module；npm run build 调用 Node 执行脚本一次，npm run dev 额外传入 --serve，监听源码并启动静态服务。完整代码、配置解释、输出目录和排错步骤见课程第4讲主讲义的1.1–1.6节。
+
 ## 阅读顺序
 
 1. `src/model.js`：三条案例，过滤条件和不可变收藏更新。

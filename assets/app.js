@@ -47,7 +47,7 @@
                   (section) => `
                     <a href="#/part/${section.id.replace("-", "/")}" class="${
                       section.id === activeId ? "active" : ""
-                    }">${section.title}</a>
+                    }" ${section.id === activeId ? 'aria-current="page"' : ""}>${section.title}</a>
                   `
                 )
                 .join("")}
@@ -71,8 +71,9 @@
             .map(
               (part) => `
                 <a class="part-card" href="#/part/${part.id}">
-                  <strong>${part.id === "0" ? "课前导读" : `第 ${part.id} 讲`} · ${part.hours ?? 2} 学时</strong>
-                  ${part.title}
+                  <span class="course-number">${part.id === "0" ? "导读" : String(part.id).padStart(2, "0")}</span>
+                  <span class="course-name">${part.title}</span>
+                  <span class="course-hours">${part.hours ? `${part.hours} 学时` : "课前阅读"}</span>
                 </a>
               `
             )
@@ -91,7 +92,7 @@
     const index = allSections.findIndex((item) => item.id === route.id);
     const prev = allSections[index - 1];
     const next = allSections[index + 1];
-    const heading = `<h1>${current.partId === "0" ? "课前导读" : `第 ${current.partId} 讲`} · ${current.title}</h1>`;
+    const heading = `<header class="lesson-head"><p class="lesson-meta">${current.partId === "0" ? "课前导读" : `第 ${current.partId} 讲 · ${current.partTitle}`}</p><h1>${current.title}</h1></header>`;
     const pageLabel = (item) => `${item.partId === "0" ? "课前导读" : `第 ${item.partId} 讲`} ${item.title}`;
 
     return `
@@ -157,7 +158,10 @@
   function setCollapsed(collapsed) {
     layoutEl.classList.toggle("sidebar-collapsed", collapsed);
     toggleBtn.setAttribute("aria-expanded", String(!collapsed));
-    toggleBtn.setAttribute("aria-label", collapsed ? "展开目录" : "折叠目录");
+    const toggleLabel = collapsed ? "展开目录" : "收起目录";
+    toggleBtn.setAttribute("aria-label", toggleLabel);
+    toggleBtn.setAttribute("title", toggleLabel);
+    toggleBtn.querySelector(".sidebar-toggle-label").textContent = toggleLabel;
     document.getElementById("sidebar").inert = collapsed;
   }
   let preference = null;

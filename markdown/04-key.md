@@ -43,6 +43,161 @@ react-basics/
 
 React 是用于描述界面的库；React DOM 把描述呈现在浏览器里；JSX 是嵌入 JavaScript 的界面语法；本例的 esbuild 负责把 JSX 与模块编译成浏览器能执行的文件。浏览器不能直接把磁盘上的 `.jsx` 当普通 HTML 打开。React 本身也不会自动提供路由、数据库或服务端 API。
 
+### 1.1 esbuild 是什么：把源码变成浏览器可加载的文件
+
+**esbuild 是一个处理前端代码的构建工具**，主要负责把开发者写的源码整理成浏览器可以加载的文件。在这套 React 实验中，它主要做三件事：
+
+1. **转换 JSX**：把 `<CaseCard />` 这样的语法转换成普通 JavaScript。
+2. **打包依赖**：从入口文件出发，沿着 `import` 找到组件、React 等依赖，组织成输出文件。
+3. **处理 CSS**：将代码中导入的样式输出为 CSS 文件。
+
+先把它与其他工具的职责分清楚：
+
+| 工具 | 职责 |
+|---|---|
+| React | 定义组件、管理状态、描述界面 |
+| esbuild | 转换和打包源码 |
+| Node.js | 执行构建脚本 |
+| npm | 安装依赖、运行配置好的命令 |
+
+本课程执行 `npm run build` 时，实际是 **Node.js 运行 `scripts/build.mjs`，脚本再调用 esbuild 完成构建**。构建结束后，浏览器加载生成的文件，不需要在浏览器里运行 esbuild。
+
+结合本例文件看完整过程：
+
+```text
+我们编写的源码与配置
+  src/main.jsx → 其他组件、React、CSS
+  scripts/build.mjs → 告诉 esbuild 从哪里读、输出到哪里
+          ↓ 在终端执行 npm run build
+  dist/index.html     从项目根目录复制来的 HTML
+  dist/app.js         转换并打包后的 JavaScript
+  dist/app.css        从入口导入的 CSS 生成的样式文件
+  dist/app.js.map     JavaScript 的调试映射
+  dist/app.css.map    CSS 的调试映射
+          ↓ 静态服务器提供文件
+  浏览器加载 HTML、JS、CSS，React 开始运行
+```
+
+`.map` 文件用于调试时把输出位置对应回源码，不是页面入口。不要手改 dist/app.js 来修改功能：下一次构建会覆盖它。应修改 src 中的源码再构建。
+
+浏览器支持标准 JavaScript 模块，但不会原生解析 JSX，也不会自动按 npm 的 node_modules 规则找到 `import ... from 'react'`。本实验通过打包解决这些问题；并不是说所有浏览器 JavaScript 都必须打包。参阅 [esbuild 入门](https://esbuild.github.io/getting-started/)。
+
+### 1.2 scripts/build.mjs 从哪里来
+
+**它是本课程预先编写、随源码提供的构建脚本，不是 npm ci 或 esbuild 自动生成的文件。** `scripts` 是我们取的目录名，`build` 是我们取的文件名，都可以另取名字，只要 package.json 中的命令同步调整。
+
+| 文件 | 谁创建或维护 | 当前实验怎么处理 |
+|---|---|---|
+| src/*.jsx | 开发者编写 | 修改组件功能 |
+| scripts/build.mjs | 开发者编写 | 调用 esbuild 并安排复制文件、服务等步骤 |
+| package.json 的 scripts | 开发者配置 | 给终端命令起一个便于记忆的名字 |
+| node_modules | npm 安装生成 | 不手工修改；本项目通过 npm ci 安装 |
+| dist/* | 构建过程生成或复制 | 用于运行预览，可重新生成 |
+
+已有教材仓库时，直接打开 `labs/react-basics/scripts/build.mjs` 阅读即可，不需要再次生成。若从零搭建同样工程，应先准备入口与 HTML，在实验根目录新建 scripts 文件夹，再用编辑器新建 build.mjs，把下面脚本保存进去；文件本身仍是普通文本代码。
+
+### 1.3 .mjs 是什么意思
+
+`.mjs` 是 JavaScript 模块文件扩展名，常理解为 **module JavaScript**。Node.js 看到它，会按 ECMAScript Module（ES Module，简称 ESM）处理，因此可以使用 import/export，以及本脚本中的顶层 await。它不是一种新语言，也不代表“压缩过的 JS”；压缩文件常用 `.min.js` 命名。
+
+| 扩展名或配置 | 在本课 Node.js 环境中的作用 |
+|---|---|
+| .mjs | 明确按 ESM 模块执行 |
+| .cjs | 明确按 CommonJS 模块执行，常使用 require/module.exports |
+| .js + package.json 中 `"type": "module"` | 该包内的 .js 按 ESM 处理 |
+| .jsx | 标明文件使用 JSX；普通 Node 执行方式和浏览器都不能因此自动识别 JSX |
+
+本实验 package.json 已有 `"type": "module"`，所以这个脚本也可以命名为 build.js 并同步修改命令；保留 .mjs 是为了让“这是由 Node 执行的模块脚本”更明确。详见 [Node.js：ES modules](https://nodejs.org/api/esm.html)。
+
+### 1.4 读懂本项目的完整构建脚本
+
+以下代码与实验中的 `scripts/build.mjs` 一致。它运行在 Node.js 中，不能当成 React 组件放到页面里。
+
+```js
+import * as esbuild from 'esbuild';
+import { mkdir, copyFile } from 'node:fs/promises';
+await mkdir('dist', { recursive: true });
+await copyFile('index.html', 'dist/index.html');
+const options = { entryPoints: ['src/main.jsx'], bundle: true, outdir: 'dist',
+  entryNames: 'app', jsx: 'automatic', sourcemap: true,
+  define: { 'process.env.NODE_ENV': '"development"' } };
+if (process.argv.includes('--serve')) {
+  const context = await esbuild.context(options);
+  await context.watch();
+  await context.serve({ servedir: 'dist', host: '127.0.0.1', port: 5174 });
+  console.log('React 基础示例：http://127.0.0.1:5174（Ctrl+C 停止）');
+} else {
+  await esbuild.build(options);
+  console.log('已生成 dist/；可使用任意静态 HTTP 服务器预览。');
+}
+```
+
+先读前半段，再看分支：
+
+- `import * as esbuild`：加载安装在本项目中的 esbuild 包，以 esbuild.build 等形式调用。
+- `node:fs/promises`：Node 内置的异步文件操作模块，无需另装；mkdir 创建输出目录，copyFile 复制 HTML。
+- `await`：等待相应异步步骤完成，再继续后面的语句，例如先确保 dist 存在，再复制文件。
+- `options`：传给 esbuild 的配置对象，声明入口、输出和转换规则。
+
+| 本例选项 | 含义 | 与实际文件的对应 |
+|---|---|---|
+| entryPoints | 从哪些文件开始构建 | 入口是 src/main.jsx，不必逐个列所有组件 |
+| bundle: true | 追踪 import 并打包依赖 | 组件及所需 React 代码进入输出 |
+| outdir | 输出目录 | dist |
+| entryNames | 输出入口文件的基本名称 | app.js，而不是 main.js |
+| jsx: 'automatic' | 使用自动 JSX 运行时转换 | 按需要引入 JSX 运行时；useState 仍须自己导入 |
+| sourcemap: true | 生成调试映射 | 产生 .map 文件 |
+| define | 在构建时替换指定表达式 | 本例把 process.env.NODE_ENV 替换为字符串 development |
+
+define 中的 `'"development"'` 外层单引号表示 JavaScript 字符串，内层双引号是要放进输出代码的字符串字面量。它不是给服务器设置环境变量；这里显式选择开发模式以保留教学提示。因此本例 `npm run build` 虽然生成文件，也不等于已完成生产压缩与性能优化。
+
+配置与 API 可对照 [esbuild API](https://esbuild.github.io/api/)。HTML 复制是脚本自己做的，不是 esbuild 自动生成页面；CSS 输出则来自 main.jsx 中的样式导入。根 index.html 里的 app.js/app.css 路径必须与输出名称一致。
+
+### 1.5 npm run build 和 npm run dev 如何找到脚本
+
+package.json 中已经配置：
+
+```json
+{
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --serve"
+  }
+}
+```
+
+这只是 scripts 部分的说明片段，**不要拿它覆盖整个 package.json**，否则会丢失原有依赖和其他字段。
+
+| 终端命令 | 实际执行 | 行为 |
+|---|---|---|
+| npm run build | node scripts/build.mjs | 走 else 分支，构建一次后退出 |
+| npm run dev | node scripts/build.mjs --serve | 创建构建上下文，监听依赖变化并启动5174端口的静态服务 |
+
+Node 执行脚本时，`process.argv` 保存命令行参数。脚本通过 includes 检查是否存在 --serve；这里的 --serve 是**我们在脚本里约定并检查的开关**，不是 Node 自动启动网站的命令。
+
+开发模式中的 watch 会重新构建变动的输入文件，但本例没有配置浏览器自动刷新或 React 热更新，保存后仍需手动刷新。index.html 是脚本启动时复制一次，修改它后需重启 dev 或重新 build；修改 build.mjs 的配置也需要重启。
+
+### 1.6 亲手验证一次构建
+
+```bash
+# 从课程仓库根目录执行
+cd labs/react-basics
+npm ci
+npm run build
+# 查看 dist 中的 index.html、app.js、app.css 和 .map 文件
+# 然后启动静态服务，访问 http://127.0.0.1:5175
+python3 -m http.server 5175 --bind 127.0.0.1 --directory dist
+```
+
+修改 src 中的一处标题，再执行 npm run build、刷新网页，应看到新标题。若改用 npm run dev，则由5174服务提供页面。两种方式选一种即可；前者便于观察输出文件，后者便于连续开发。
+
+直接执行 `node scripts/build.mjs` 时，先进入 `labs/react-basics`：脚本中的相对路径以当前工作目录为起点，不会因为脚本放在 scripts 内就自动切换目录。若提示找不到 esbuild，检查是否安装依赖；若提示找不到 src/main.jsx 或 index.html，检查终端所在目录；若页面加载 app.js 返回404，检查是否构建并把 dist 作为服务目录。
+
+<details><summary>自检：npm ci 会生成 build.mjs 吗？build.mjs 会在浏览器中执行吗？</summary><p>都不会。它由开发者编写，npm ci 安装所需依赖，Node 执行构建脚本，浏览器最终加载 dist 中的文件。</p></details>
+
+<details><summary>为什么修改源组件后，直接刷新5175页面可能看不到变化？</summary><p>5175的 Python 静态服务只提供已有 dist 文件，不会编译 JSX。必须先再次 npm run build；5174开发模式则监听源码进行重建，随后手动刷新。</p></details>
+
+
 入口的关键代码是：
 
 ```jsx
@@ -502,3 +657,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 随后打开 [离线 Part 1a](http://127.0.0.1:8765/#/part/1/a)、[离线 Part 1c](http://127.0.0.1:8765/#/part/1/c)、[离线 Part 1d](http://127.0.0.1:8765/#/part/1/d)、[离线 Part 2a](http://127.0.0.1:8765/#/part/2/a)、[离线 Part 2b](http://127.0.0.1:8765/#/part/2/b)。这些 localhost 链接只在本机资料服务启动后有效；端口被占用时更换端口并同步调整访问地址。也可直接用编辑器阅读上表 Markdown 文件。
 
 来源与版权：Full Stack Open / University of Helsinki，沿用离线材料注明的 CC BY-NC-SA 3.0 及原署名；React 官方文档用于概念核对与延伸阅读，本讲不镜像其全文。案例代码为本课程编写，依赖许可证分别适用。详见仓库 SOURCES.md。下一步进入[课堂练习](#/part/4/b)，用验收表证明自己能够修改应用。
+
+## 继续学习：React、Next.js 与 Ant Design
+
+第4讲新增三个可从左侧目录直接进入的拓展小节：[React 官方教程与状态设计](#/part/4/d)、[Next.js 路由与服务端/客户端边界](#/part/4/e)、[Ant Design 表格与表单](#/part/4/f)。它们沿用案例库，提供逐步讲解、官方资料定位和独立实验；作为课前/课后补充或第7讲的选用对比，不增加本讲必做负担与课程总学时。
