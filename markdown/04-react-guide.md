@@ -160,3 +160,54 @@ function TitleEditor({ item, onSave }) {
 <details><summary>更换 key 为什么能重置草稿？能否每次渲染都用随机 key？</summary><p>key 改变会让 React 重新识别组件实例。随机 key 会不断卸载重建，输入与焦点可能丢失。应使用真正对应业务身份的值。</p></details>
 
 下一步：[Next.js：路由与服务端/客户端边界](#/part/4/e)。若还无法解释 state 与 props，先完成原案例库，不急于引入框架。
+
+
+## 进阶衔接：用中文说清状态如何流动
+
+技术术语应先说明含义，再保留代码中的英文名称。不要把“单向数据流”写成“单向数据流”；“单向”描述数据传递的方向。
+
+| 术语 | 本课程的表述与含义 | 案例中的位置 |
+|---|---|---|
+| component | 组件：根据输入描述界面的可复用单元 | CaseEditor |
+| props | 组件属性：父组件传入的数据与回调 | initialItems |
+| state | 状态：组件需要记住、修改后会触发重新渲染的数据 | items、keyword |
+| render | 渲染：React 根据当前输入计算界面描述 | 函数组件执行 |
+| event handler | 事件处理函数：响应点击、输入或提交 | save |
+| controlled input | 受控输入：显示值由状态决定，输入事件更新状态 | 标题筛选框 |
+| derived value | 派生值：能由已有数据计算出的结果 | visible、待处理数量 |
+| state updater | 状态更新函数：请求 React 使用新状态重新渲染 | setItems |
+| Effect | 副作用；本节特指组件与外部系统的同步逻辑 | 请求 HTTP 接口 |
+| race condition | 竞态条件：多个异步操作完成顺序不同，导致结果相互覆盖 | 旧查询晚于新查询返回 |
+
+### 从编辑工作台理解“状态放在哪里”
+
+打开配套实验的 `/workbench`，同时阅读 [CaseEditor.jsx](labs/next-antd-basics/components/CaseEditor.jsx)。页面组件提供初始数组，CaseEditor 保存已提交记录，Form 保存尚未提交的草稿，Table 接收计算后的列表。组件属性向下传递，用户操作通过回调通知拥有状态的组件，再由该组件更新状态。这就是单向数据流。
+
+| 数据 | 保存位置 | 更新时机 |
+|---|---|---|
+| 已提交记录 items | CaseEditor 的状态 | 保存或确认删除 |
+| 查询条件 keyword、status | CaseEditor 的状态 | 输入或选择 |
+| 草稿 title、summary 等 | Form 的表单数据 | 编辑字段 |
+| 匹配结果 visible | 每次渲染直接计算 | 不单独保存 |
+| 正在编辑的记录身份 editing | CaseEditor 的状态 | 打开或关闭编辑面板 |
+
+不要用一个 Effect 把 visible 再复制到状态中。这会产生两份需要同步的数据，还增加一次更新。也不要在输入标题时直接修改 items 中的记录，否则“取消编辑”就无法放弃草稿。
+
+```jsx
+// 不可变更新：保留其他记录，只替换目标记录。
+setItems(previous => previous.map(item =>
+  item.id === saved.id ? saved : item
+));
+// 删除也产生新数组，不能对原数组直接 splice。
+setItems(previous => previous.filter(item => item.id !== removedId));
+```
+
+以上是理解更新方式的独立片段；完整示例通过 saveRecord 集中检查字段并返回新数组。setItems 不会立即修改当前事件处理函数捕获的 items：本次渲染中的状态是一份快照。连续依赖上一次结果的更新应采用函数式更新，不能把多个 `setCount(count + 1)` 当成逐次累加。
+
+### 什么时候需要 Effect
+
+筛选、计数和排序属于计算；保存按钮引发的数据更新属于事件处理；两者通常不需要 Effect。`/remote` 则需要让当前查询条件与 HTTP 请求保持同步，因此使用 useEffect，并在条件变化或组件卸载时取消旧请求。Effect 的依赖项是同步逻辑读取的响应式值，不是为了“只执行一次”可以任意删掉的清单。
+
+练习：在开发者工具中启用网络限速，先查“DNS”，再查“订单”。即使旧请求较晚结束，也只能展示当前查询结果。检查 RemoteCases.jsx 中 AbortController 与 active 标记分别承担什么责任：前者请求取消网络操作，后者阻止已经失效的异步回调写入状态。
+
+官方阅读：★★★★★ [选择状态结构](https://zh-hans.react.dev/learn/choosing-the-state-structure)、[在组件间共享状态](https://zh-hans.react.dev/learn/sharing-state-between-components)；★★★★☆ [你可能不需要 Effect](https://zh-hans.react.dev/learn/you-might-not-need-an-effect)。先画出数据所有者，再写组件。

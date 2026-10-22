@@ -6,7 +6,7 @@
 
 先修：HTML 表单、JavaScript 函数和事件、数组 `map/filter/includes`、对象、模块导入导出。不会 React 没有关系；若这些 JavaScript 语法仍不熟悉，先读本讲第2节与 Full Stack Open（下文简称 FSO）Part 1b。
 
-**2学时按90分钟组织**：10分钟运行与对比原生DOM；20分钟组件、JSX、props；20分钟事件、state、受控输入；30分钟共享状态与案例库练习；10分钟解释与验收。第10节的复杂更新、第11节的调试以及扩展阅读用于课后巩固，不要求90分钟内逐字讲完。首次依赖安装放在课前完成。
+学习顺序为：对比原生 DOM 与 React，理解组件、JSX 和组件属性，再学习事件、状态、受控输入与共享状态。运行示例前先安装依赖；完成基础练习后，再学习复杂更新、调试与拓展内容。
 
 | 学习阶段 | 可见结果 | 要能解释的问题 |
 |---|---|---|
@@ -149,7 +149,7 @@ if (process.argv.includes('--serve')) {
 | sourcemap: true | 生成调试映射 | 产生 .map 文件 |
 | define | 在构建时替换指定表达式 | 本例把 process.env.NODE_ENV 替换为字符串 development |
 
-define 中的 `'"development"'` 外层单引号表示 JavaScript 字符串，内层双引号是要放进输出代码的字符串字面量。它不是给服务器设置环境变量；这里显式选择开发模式以保留教学提示。因此本例 `npm run build` 虽然生成文件，也不等于已完成生产压缩与性能优化。
+define 中的 `'"development"'` 外层单引号表示 JavaScript 字符串，内层双引号是要放进输出代码的字符串字面量。它不是给服务器设置环境变量；这里显式选择开发模式以保留开发调试提示。因此本例 `npm run build` 虽然生成文件，也不等于已完成生产压缩与性能优化。
 
 配置与 API 可对照 [esbuild API](https://esbuild.github.io/api/)。HTML 复制是脚本自己做的，不是 esbuild 自动生成页面；CSS 输出则来自 main.jsx 中的样式导入。根 index.html 里的 app.js/app.css 路径必须与输出名称一致。
 
@@ -341,7 +341,7 @@ function CaseList({ items }) {
 
 检查点：先预测空数组、一个元素、顺序交换后的输出，再实际修改阶段一的数据观察。稳定 key 的主要收益是保留正确身份，不只是消除控制台警告。阅读：[Rendering Lists](https://react.dev/learn/rendering-lists) 与 FSO Part 2a“渲染集合”“key属性”。
 
-## 7. 事件与 state：让组件记住用户操作
+## 7. 事件与状态：让组件记住用户操作
 
 ### 7.1 把函数交给事件，而不是立即执行
 
@@ -535,7 +535,7 @@ export function filterCases(items, keyword, industry, onlyFavorites, favoriteIds
 
 三组条件用 `&&` 连接，表示同时满足；行业内部的 `||` 表示“全部行业”或“恰好匹配”。`!onlyFavorites` 为真时，不要求出现在收藏数组中。先用纸笔算一遍，再运行：仅收藏“链路中断”，关键词为空，行业为通信，只看收藏开启，结果应为1。
 
-“清空筛选”重置 keyword、industry、onlyFavorites，**保留收藏**。它没有叫“清空收藏”，不能顺便删除用户收藏。勾选“只看收藏”后取消最后一条收藏，卡片会消失并显示空态，这是筛选规则的结果。完整组件及标签、按钮无障碍属性见 [App.jsx](labs/react-basics/src/App.jsx)，纯计算见 [model.js](labs/react-basics/src/model.js)。
+“清空筛选”重置 keyword、industry、onlyFavorites，**保留收藏**。它没有叫“清空收藏”，不能顺便删除用户收藏。勾选“只看收藏”后取消最后一条收藏，卡片会消失并显示无数据提示，这是筛选规则的结果。完整组件及标签、按钮无障碍属性见 [App.jsx](labs/react-basics/src/App.jsx)，纯计算见 [model.js](labs/react-basics/src/model.js)。
 
 ## 10. 不可变更新：增加、删除、编辑（课后巩固）
 
@@ -656,8 +656,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 随后打开 [离线 Part 1a](http://127.0.0.1:8765/#/part/1/a)、[离线 Part 1c](http://127.0.0.1:8765/#/part/1/c)、[离线 Part 1d](http://127.0.0.1:8765/#/part/1/d)、[离线 Part 2a](http://127.0.0.1:8765/#/part/2/a)、[离线 Part 2b](http://127.0.0.1:8765/#/part/2/b)。这些 localhost 链接只在本机资料服务启动后有效；端口被占用时更换端口并同步调整访问地址。也可直接用编辑器阅读上表 Markdown 文件。
 
-来源与版权：Full Stack Open / University of Helsinki，沿用离线材料注明的 CC BY-NC-SA 3.0 及原署名；React 官方文档用于概念核对与延伸阅读，本讲不镜像其全文。案例代码为本课程编写，依赖许可证分别适用。详见仓库 SOURCES.md。下一步进入[课堂练习](#/part/4/b)，用验收表证明自己能够修改应用。
+来源与版权：Full Stack Open / University of Helsinki，沿用离线材料注明的 CC BY-NC-SA 3.0 及原署名；React 官方文档用于概念核对与延伸阅读，本讲不镜像其全文。案例代码为本课程编写，依赖许可证分别适用。详见仓库 SOURCES.md。下一步进入[实践练习](#/part/4/b)，用验收表证明自己能够修改应用。
 
 ## 继续学习：React、Next.js 与 Ant Design
 
-第4讲新增三个可从左侧目录直接进入的拓展小节：[React 官方教程与状态设计](#/part/4/d)、[Next.js 路由与服务端/客户端边界](#/part/4/e)、[Ant Design 表格与表单](#/part/4/f)。它们沿用案例库，提供逐步讲解、官方资料定位和独立实验；作为课前/课后补充或第7讲的选用对比，不增加本讲必做负担与课程总学时。
+可从左侧目录继续学习三个基础拓展小节：[React 官方教程与状态设计](#/part/4/d)、[Next.js 路由与服务端/客户端边界](#/part/4/e)、[Ant Design 表格与表单](#/part/4/f)。它们沿用案例库，提供逐步讲解、官方资料定位和独立实验；完成后可进入[AI 氛围编程：系统 UI 原型设计](#/part/4/g)，将这些知识应用到自己的项目。

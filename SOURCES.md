@@ -35,3 +35,20 @@ React 官方资料通过 [Learn React](https://react.dev/learn) 核对；本讲�
 | [Ant Design React](https://ant.design/docs/react/introduce-cn)、[Form](https://ant.design/components/form-cn)、[Table](https://ant.design/components/table-cn)、[Next.js 集成](https://ant.design/docs/react/use-with-next-cn) | 第4讲 f：受控筛选、表格、表单、首屏样式 | 引用 API 与集成方法，不复制完整文档或图片 |
 
 原文版权及各项目许可独立适用，公开访问不意味着整套教程可任意再分发。配套实验依赖版本与锁文件见 labs/next-antd-basics，未将这些机构标注为本课程作者或背书方。FSO 离线原文继续复用原目录，没有重复下载。
+
+
+## React、Next.js 与 Ant Design 进阶补充（2026-10-21）
+
+课程新增原创案例目录、接口请求与本地编辑工作台。参考 React 官方中文文档的状态结构与 Effect、Next.js 官方 App Router 的 page/dynamic-routes/loading/notFound、Ant Design 官方中文 Form/Table/Drawer/Popconfirm/ConfigProvider 文档。具体官方链接列于各节末尾；不转载官方全文，商标与原文版权归各自权利人。本次保留实验已有依赖锁文件，未随在线文档更新依赖版本。
+
+## AI 氛围编程与 UI 原型（2026-10-21）
+
+新增原创教程 markdown/04-ai-ui.md，参考 Stanford CS146S 官方课程介绍（https://themodernsoftware.dev/）、DeepLearning.AI 的 Build Apps with Windsurf’s AI Coding Agents 公开课程介绍（https://www.deeplearning.ai/courses/build-apps-with-windsurfs-ai-coding-agents）、OpenAI 前端实践（https://developers.openai.com/cookbook/examples/gpt-5/gpt-5_frontend）及 React 官方中文 Context 教程。课程内列出阅读任务与链接。DeepLearning.AI 正文访问返回403，只引用公开介绍，不声称已读完整课程；未转载受限内容。情境包、提示词、案例流程与作业题为本课程原创，各来源版权归原机构。
+
+## FDE 工作台整体 UI 案例（2026-10-22）
+
+案例源为用户指定的 FDE-Workspace：POC详细系统功能设计、web/README.md、web/package.json、web/src 下的 AppShell、ui、FlowCanvas、store、theme 和业务页面。图片从该项目“白老师/立项申请/screenshots”选取4张既有截图，复制至 assets/fde-ui，并保留原文件名。图片是源项目既有展示材料，不是本次运行证明。
+
+教学轮次和提示词根据现有成果重新编写，未发现完整原始生成对话，源目录无可用 Git 历史。源码证据索引见 labs/fde-ui-case/SOURCE_MAP.md。未复制项目全文、后台数据或无关资料；不推定用户项目及截图具有开源再分发许可。
+
+FDE 案例现包含原 web 前端源码与模拟数据的独立副本，位于 labs/fde-ui-case；保留依赖版本与锁文件，未复制原项目其他业务资料、依赖目录或构建缓存。

@@ -34,7 +34,7 @@ LECTURES = [
 DEFAULT_KINDS = [
     ("key", "", None),  # title 用 LECTURES 第三列
     ("project", "a", "项目关联"),
-    ("class", "b", "课堂练习"),
+    ("class", "b", "实践练习"),
     ("homework", "c", "课后练习"),
 ]
 
@@ -51,14 +51,14 @@ LECTURE_3_SECTIONS = [
     ("terrarium", "b", "花艺瓶：HTML、CSS、DOM 与闭包"),
     ("typing", "c", "打字游戏：事件、状态与 DOM"),
     ("project", "d", "项目关联"),
-    ("class", "e", "课堂练习"),
+    ("class", "e", "实践练习"),
     ("homework", "f", "课后练习"),
 ]
 
 INTRO = """
 <p><strong>16 讲 × 2 学时 = 32 学时</strong>。第 0 部分为课前导读，不另占学时。以 AI-FDE 的最小业务切片或独立案例库，理解并实现现代全栈与 AI 原生应用。</p>
 <p>主线：交互页面 → 案例 API 与数据库 → 身份及权限 → 测试与交付 → 带证据的 AI 建议 → 受控工具执行。完整平台、多 Agent 和复杂基础设施为拓展。</p>
-<p>每讲包含目标、概念与示例、自检、项目关联、课堂练习、课后练习。第 3 讲另保留 JavaScript 补充与两项选修实验。模拟数据与真实服务必须明确区分。</p>
+<p>每讲包含目标、概念与示例、自检、项目关联、实践练习、课后练习。第 3 讲另保留 JavaScript 补充与两项选修实验。模拟数据与真实服务必须明确区分。</p>
 """.strip()
 
 ATTRIBUTION = """
@@ -87,6 +87,8 @@ def sections_spec(num: int, key_title: str) -> list[tuple[str, str, str]]:
             ("react-guide", "d", "React 官方教程与状态设计练习"),
             ("nextjs", "e", "Next.js：路由与服务端/客户端边界"),
             ("antd", "f", "Ant Design：表格、表单与组件协作"),
+            ("ai-ui", "g", "AI 氛围编程：系统 UI 原型设计"),
+            ("vibe-case", "h", "氛围编程案例：FDE 工作台整体 UI 设计"),
         ])
     return out
 

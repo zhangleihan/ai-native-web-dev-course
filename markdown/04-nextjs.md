@@ -2,7 +2,7 @@
 
 ## 学习目标与范围
 
-完成本节后，应能根据文件路径找到页面，说明 layout 的作用，将需要事件与 state 的交互放在客户端边界，并区分页面组件与 HTTP 接口。前提是完成 React 主讲义；建议课后60–90分钟，或由教师在第7讲选用15分钟对比演示，不额外增加32学时。
+完成本节后，应能根据文件路径找到页面，说明 layout 的作用，将需要事件与状态的交互放在客户端边界，并区分页面组件与 HTTP 接口。前提是完成 React 主讲义；建议用60–90分钟完成阅读与实验，并结合第7讲理解前后端集成。
 
 本课程使用 **App Router**。网上使用 `pages/_app`、`getServerSideProps` 的材料属于另一套路由体系，不能直接粘贴进本节的 app 目录。Next.js 是一种实现路线，原课程的 React + Express 路线仍然有效，不要求把已经完成的后端重写。
 
@@ -147,7 +147,7 @@ export default function SmallFilter({ initialItems }) {
 }
 ```
 
-若将这段单独保存到 `components/SmallFilter.jsx`，可临时在页面中替换 CaseWorkbench 来观察更小的例子。服务端页面传入的是可以序列化的案例数组；普通回调函数不能作为常规 props 从这个边界随意传到客户端。筛选 setter 与事件函数留在客户端组件内部。
+若将这段单独保存到 `components/SmallFilter.jsx`，可临时在页面中替换 CaseWorkbench 来观察更小的例子。服务端页面传入的是可以序列化的案例数组；普通回调函数不能作为常规 props 从这个边界随意传到客户端。筛选条件的状态更新函数 与事件函数留在客户端组件内部。
 
 客户端组件并不意味着“首屏完全不经过服务器”。Next.js 可以为初始访问生成 HTML，客户端再接管交互，这个过程称为 hydration（水合）。因此不要在组件渲染时直接读取 window/localStorage，也不要在初始渲染生成随机文本，使服务器与浏览器首次输出不一致。本例的随机 id 只在用户提交事件中生成。
 
@@ -165,7 +165,7 @@ Ant Design 输入、表单、表格
 handleAdd：创建记录 → setItems → 计算 visible → Table 更新
 ```
 
-本例 `useState(initialItems)` 表示首次挂载时取得初始列表，后续新增只修改浏览器组件的 state。刷新会恢复初始记录。它不是服务端数据库，也没有向 API 写入。这一点必须在界面、演示和作业说明中一致表达。
+本例 `useState(initialItems)` 表示首次挂载时取得初始列表，后续新增只修改浏览器组件的状态。刷新会恢复初始记录。它不是服务端数据库，也没有向 API 写入。这一点必须在界面、演示和作业说明中一致表达。
 
 如果未来服务器持续推送新的 initialItems，不要以为 useState 会自动重新初始化；应重新设计服务器数据与本地编辑的同步规则。第7讲处理请求状态，第8讲处理身份和权限，第6讲处理持久化。
 
@@ -195,7 +195,7 @@ export function GET(request) {
 
 ## 7. 构建与常见问题
 
-开发服务器用于改代码观察结果；生产构建用于检查交付文件，两者不是同一验收。实验选择 webpack 构建以保持课堂环境一致，不讨论不同打包器的性能比较。
+开发服务器用于改代码观察结果；生产构建用于检查交付文件，两者不是同一验收。实验选择 webpack 构建以保持实验环境一致，不讨论不同打包器的性能比较。
 
 ```bash
 # 在 labs/next-antd-basics 内执行
@@ -211,7 +211,7 @@ npm start
 | useState / onClick 报错 | 交互模块是否正确建立客户端边界 |
 | 找不到页面 | 是否为 app 下的 page.jsx；是否混用 Pages Router |
 | 首屏水合警告 | 首次渲染是否读取浏览器独有信息、时间或随机值 |
-| JSON 接口总看不到新增项 | 本实验的接口与本地 state 本来就未连接 |
+| JSON 接口总看不到新增项 | 本实验的接口与本地状态 本来就未连接 |
 | 首次样式闪动 | 根布局是否配置下一节的 AntdRegistry |
 | Node 版本报错 | 当前终端 node --version，不只看安装过什么版本 |
 
@@ -219,6 +219,69 @@ npm start
 
 <details><summary>use client 表示组件只会在浏览器执行吗？</summary><p>不应这样概括。它建立客户端模块边界，初始访问仍可能有服务端预渲染；浏览器接管后运行交互。渲染阶段仍需避免直接依赖 window。</p></details>
 
-<details><summary>页面表单新增成功，GET 接口是否必然返回新记录？</summary><p>不必然。本例只更新客户端 state，接口读固定初始数组。接通需要明确写入接口、存储和刷新策略。</p></details>
+<details><summary>页面表单新增成功，GET 接口是否必然返回新记录？</summary><p>不必然。本例只更新客户端状态，接口读固定初始数组。接通需要明确写入接口、存储和刷新策略。</p></details>
 
 阅读顺序：★★★★★ React Foundations → ★★★★★ Layouts and Pages → ★★★★★ Server and Client Components → ★★★★☆ Route Handlers。每读一节，指出本实验中对应文件，并完成一次可见操作。下一步：[Ant Design 表格与表单](#/part/4/f)。
+
+
+## 8. 进阶实例一：可以分享网址的案例目录
+
+前面的 `/cases` 保留为三条记录的入门练习。接下来访问 `/catalog`：初始数据为六条，每页三条。这一页由服务端组件读取查询参数，不使用客户端状态保存筛选条件。建议用30分钟完成“筛选—翻页—详情—无效地址”四步，再用30分钟阅读接口请求示例；可分两次完成。
+
+| 地址或文件 | 解决的问题 |
+|---|---|
+| `/catalog?q=DNS&industry=telecom` | 用 URL 查询参数表达筛选条件 |
+| app/catalog/page.jsx | 等待 searchParams，执行查询并渲染列表 |
+| `/catalog?page=2` | 显示第二页三条案例 |
+| app/catalog/[id]/page.jsx | 动态路由，以案例编号读取详情 |
+| app/catalog/not-found.jsx | 编号不存在时给出可恢复的提示 |
+| app/catalog/loading.jsx | 路由加载期间显示等待提示 |
+| lib/catalog.js | 查询、分页与数据校验的纯函数 |
+
+“动态路由”表示路径的一段是参数，例如 `/catalog/case-003` 中的 case-003；“查询参数”是问号之后的条件，例如 `?q=DNS`。两者分别由 params 和 searchParams 提供。本实验使用的 App Router 版本中，这两个页面属性需要等待解析：
+
+```jsx
+// 详情页中的关键步骤，完整文件见 app/catalog/[id]/page.jsx。
+const { id } = await params;
+const item = catalog.find(item => item.id === id);
+if (!item) notFound();
+```
+
+先访问 `/catalog/case-003`，应显示“DNS 解析失败”；再访问 `/catalog/not-exist`，应显示“未找到该案例”及返回链接。notFound() 终止当前路由片段的渲染，交给框架显示未找到页面，不应返回一个伪造的空案例。
+
+### 表单提交如何变成新的页面
+
+目录页使用原生表单，action 指向 `/catalog`，默认按 GET 提交。输入框的 name 决定查询参数名，提交后网址变化，服务端读取新的参数并重新生成结果。它不是 Server Action，也没有修改任何记录。
+
+```text
+输入关键词 → 提交 GET 表单 → URL 携带 q、industry
+→ 服务端等待 searchParams → queryCatalog 校验并查询
+→ 页面显示结果与分页链接
+```
+
+分页链接保留原有筛选条件，只改变 page；重新提交筛选表单时不携带旧页码，因此回到第一页。queryCatalog 拒绝零、负数、小数和非法行业；超出结果末页的正整数归一到最后一页；无结果时仍显示第1页。这里明确选择“页码归一”，也可以在其他项目选择返回错误，但文档与实现必须一致。重复同名参数在目录页取第一个值，与 URLSearchParams.get 的接口规则一致。
+
+操作验收：初始共6条；第二页从“登录超时”开始；筛选 DNS 与通信得到1条；改为零售得到0条；刷新和复制网址后结果不变。快速本地页面未必能明显看见 loading.jsx，不能把“没见到等待提示”误判为文件失效。
+
+## 9. 进阶实例二：真正接通接口的客户端页面
+
+访问 `/remote`，打开浏览器开发者工具的网络面板。点击“查询接口”后，应看到 `/api/catalog` 请求。这里与前面的 `/cases` 不同：表格数据确实来自 HTTP 响应。完整代码见 [RemoteCases.jsx](labs/next-antd-basics/components/RemoteCases.jsx) 和 [接口处理函数](labs/next-antd-basics/app/api/catalog/route.js)。
+
+| 请求 | 状态码 | 响应内容与界面 |
+|---|---|---|
+| `/api/catalog?page=2` | 200 | items、total、page、pageSize、pages |
+| `/api/catalog?q=不存在` | 200 | items 为空；界面显示没有匹配结果 |
+| `/api/catalog?page=-1` | 400 | error；查询参数不合法 |
+| `/api/catalog?demoError=1` | 503 | error；课堂专用的模拟服务失败 |
+
+界面明确区分“加载中”“成功有数据”“成功但没有结果”“失败”。fetch 收到400或503时通常仍会正常返回 Response，因此必须检查 response.ok，不能仅凭 Promise 没有抛错就认定成功。
+
+RemoteCases 分开保存输入草稿 draft 与已提交查询 query：打字只修改草稿，按回车或点击查询才提交。页码、查询、模拟失败开关或重试次数变化后，Effect 发起请求；清理函数取消旧请求，并阻止旧结果覆盖新结果。它没有定时轮询，也没有把查询结果写进数据库。
+
+验收步骤：查询 DNS 得到1条；查询不存在的文字得到无结果提示；勾选“模拟服务失败”出现错误；仍勾选时重试会继续失败，这是预期行为；取消勾选后恢复。网络限速下连续切换查询，最终结果必须对应最后一次条件。这个演示开关是明确写在实验接口中的故障分支，不代表实际服务发生了故障。
+
+### 两种取数方式的边界
+
+服务端目录直接调用本工程的 queryCatalog；客户端请求页通过 HTTP 调用接口，再由接口调用同一个函数。共享的是业务计算代码，不是浏览器中的状态。`/workbench` 编辑工作台只演示本地状态更新，因此不会改变这两个只读页面。若要变成真实系统，还需要写入接口、服务端校验、身份验证、权限检查与数据库，本节不假装已经完成这些工作。
+
+官方定位：★★★★★ [页面参数](https://nextjs.org/docs/app/api-reference/file-conventions/page)、[动态路由](https://nextjs.org/docs/app/api-reference/file-conventions/dynamic-routes)；★★★★☆ [加载界面](https://nextjs.org/docs/app/api-reference/file-conventions/loading)、[notFound](https://nextjs.org/docs/app/api-reference/functions/not-found)。

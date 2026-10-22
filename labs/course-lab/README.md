@@ -44,7 +44,7 @@ docker compose start
 
 数据库不发布宿主机端口，Web只发布到127.0.0.1。首次启动自动执行幂等迁移和seed；已有同名账号的密码不被seed覆盖。修改LAB_PASSWORD不会自动重置数据库中已有密码。
 
-创建一条案例后执行 `docker compose up --build --force-recreate web`，再登录确认记录保留。`docker compose down` 保留卷；不要把删除卷当作重启。当前交付环境未安装Docker，此路线需在授课机执行本段验收。
+创建一条案例后执行 `docker compose up --build --force-recreate web`，再登录确认记录保留。`docker compose down` 保留卷；不要把删除卷当作重启。本路线需要 Docker 环境；请记录实际执行结果，不能用内存模式的结果代替持久化验证。
 
 **路线B：已有隔离 PostgreSQL。** 创建全新的练习库，设置 `.env`：`LAB_STORAGE=postgres` 与 `DATABASE_URL`。执行：
 
