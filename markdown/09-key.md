@@ -1,70 +1,124 @@
-# 实时反馈：轮询、SSE 与连接生命周期
+# 实时Web应用：从一次响应到持续反馈
 
 ## 学习目标与课前准备
 
-学完本讲，应能：比较三种实时通信方式；观察事件流；处理断开、结束和取消
+第七讲用fetch读取一次完整结果，第八讲为读写增加身份与权限。本讲继续处理一个常见问题：任务需要数秒甚至更久，页面如何显示过程？网络中断后，怎样知道任务现在是什么状态？
 
-先修：第 7 讲异步请求；本讲先使用模拟事件，不需要模型账号。学习时先理解概念与示例，再完成实践练习，最后用自检题检验理解。
+学完后，应能根据通信方向选择轮询、SSE或WebSocket，读懂SSE事件格式，在React中管理订阅，区分连接与任务的生命周期，并用实际请求验证重连、取消及失败。
 
+先修为HTTP请求/响应、Promise与async/await、React状态和Effect、服务端资源授权。实验使用固定模拟任务，不需要模型账号、数据库或云服务。界面中的进度代表预设步骤，不是模型实际工作量。
 
-## 先选通信需求，再选协议
+| 学习顺序 | 内容 | 核心问题 |
+|---|---|---|
+| 本节 | 需求、术语与三种状态 | 页面究竟需要“实时”到什么程度？ |
+| [SSE与Express](#/part/9/d) | 报文、创建/快照/订阅/取消接口 | 一条事件怎样从服务器到浏览器？ |
+| [React订阅教程](#/part/9/e) | Effect、事件处理、去重与重试 | 为什么不能每次渲染都建立连接？ |
+| [恢复、取消与部署](#/part/9/f) | 历史、快照、心跳、背压 | 断线后能恢复什么，不能恢复什么？ |
+| [实践练习](#/part/9/b) | 六组对照演示与结果记录 | 如何证明断开并没有取消任务？ |
 
-短任务可以等待一次 HTTP 响应；长任务需要进度反馈。轮询实现简单但有额外请求，SSE 适合服务器向浏览器持续推送文本事件，WebSocket 适合需要双向低延迟通信的场景。它们没有一条适合所有应用的优劣排名。
+两学时核心学习顺序：需求与状态15分钟、SSE与接口20分钟、React订阅20分钟、对照实验25分钟、检查与讨论10分钟。fetch流解析、代理部署和持久事件日志作为拓展，不要求一次实现全部机制。
 
-原生 EventSource 使用 GET，不能像 fetch 一样设置任意请求头或发送 POST body。可先 POST 创建 run，再用 EventSource GET 订阅；需要 POST 流时可使用 fetch 读取响应流，但必须自己正确处理分块、解码与 SSE 帧边界。
+## 1. 实时意味着及时更新
 
-## 可运行的模拟 SSE 路由
+“实时Web”通常指服务器状态变化后，页面能够在业务允许的时间内更新。它不意味着零延迟，也不等于必须使用WebSocket。订单状态每几秒更新可能足够；协同编辑则可能要求更频繁的双向交换。
 
-把以下路由放在第 5 讲 `app.listen` 之前。数据是模拟进度，界面须注明；已有登录系统时，在此路由前增加身份及 run 归属检查。
+先写需求：谁产生数据、谁需要发送消息、允许多长延迟、是否必须恢复历史、一次页面预计接收多少数据，再选择通信方式。
+
+案例库的一次模拟诊断可以拆成“读取案例—检查字段—整理建议”等步骤。用户需要知道任务仍在执行、是否失败，以及何时可以查看结果，不必在每个字符到达时重绘整页。
+
+## 2. 四种获取更新的方式
+
+| 方式 | 基本过程 | 适合本课的需求 | 需要处理的代价 |
+|---|---|---|---|
+| 普通HTTP | 发一次请求，取一个结果 | 创建任务、读取当前快照、取消任务 | 响应返回后不再持续通知 |
+| 短轮询 Polling | 按间隔重复GET快照 | 更新不频繁、容许数秒延迟 | 无变化也会请求；须停止和防重叠 |
+| SSE，服务器发送事件 | 保持HTTP响应，服务器持续发送文本事件 | 任务进度、通知、执行轨迹 | 连接恢复、历史范围、资源清理 |
+| WebSocket | 建立连接后双方都可主动发送消息 | 协作、游戏等频繁双向交互 | 消息协议、重连、授权与流量管理 |
+
+SSE的推送方向是服务器到客户端，页面仍可通过普通POST提交命令，因此“有取消按钮”不意味着必须选择WebSocket。[MDN WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)可用于比较双向通信需求。
+
+长轮询是另一种HTTP方案：服务器在更新出现或超时后返回，客户端随后再发下一次请求。它与固定间隔的短轮询不同，也不等于在同一响应里持续发送多条SSE事件。
+
+## 3. 轮询先保证正确，再优化频率
+
+以下是流程示意，不是完整组件；`loadSnapshot`表示一次GET，`isTerminal`判断完成、取消或失败，`stopped`由页面清理逻辑设置。
 
 ```javascript
-app.get('/api/demo-events', (req, res) => {
-  res.set({'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache'});
-  res.flushHeaders();
-  let seq = 0;
-  const timer = setInterval(() => {
-    seq += 1;
-    res.write(`id: ${seq}\nevent: progress\ndata: ${JSON.stringify({step: seq, mode: 'mock'})}\n\n`);
-    if (seq === 3) {
-      clearInterval(timer);
-      res.write('event: done\ndata: {"status":"completed"}\n\n');
-      res.end();
-    }
-  }, 500);
-  res.on('close', () => clearInterval(timer));
-});
+async function poll() {
+  if (stopped) return;
+  const snapshot = await loadSnapshot();
+  if (stopped) return;
+  show(snapshot);
+  if (!isTerminal(snapshot.status)) {
+    timer = setTimeout(poll, 2000);
+  }
+}
 ```
 
-同源页面中观察：
+等本次请求结束后再安排下一次，可避免网络慢时setInterval不断叠加请求。真实实现还要处理失败、AbortController和清理；不能让错误分支悄悄停止而没有提示。
 
-```javascript
-const source = new EventSource('/api/demo-events');
-source.addEventListener('progress', event => console.log(JSON.parse(event.data)));
-source.addEventListener('done', () => source.close());
-source.onerror = () => { console.log('连接中断，请重试'); source.close(); };
+若100个客户端每2秒请求一次，理想稳定条件下约有50次请求/秒，即使数据未变也存在这些请求。这个计算只是帮助理解负载，不是服务器性能测试结果。轮询间隔还影响更新被发现的时间，需结合业务要求调整。
+
+## 4. 把“创建任务”与“观察任务”分开
+
+```text
+点击创建 → POST /api/tasks → 返回201与任务编号
+                    │
+          服务端定时推进同一个任务
+                    │
+页面订阅 → GET /api/tasks/:id/events → 持续事件
+查询状态 → GET /api/tasks/:id        → 当前快照
+明确取消 → POST /api/tasks/:id/cancel → 返回取消后的状态
 ```
 
-事件以空行分隔；一次 TCP/HTTP 读取不保证恰好包含一个事件。`done` 是应用自定义事件，收到后主动关闭，避免自动重连又开始一次演示。
+`task`表示服务端正在执行或已经结束的任务；`snapshot`是某一时刻的完整状态；`event`是一次可编号的变化记录；`subscription`是某个客户端对任务的观察连接。一个任务可以被多个页面观察，连接重建不应重新创建任务。
 
-## 连接状态不等于任务状态
+本实验把任务保存在进程内。创建响应会很快返回，后续步骤由独立定时器推进。这不是持久化作业队列；进程退出后任务与历史都丢失。
 
-浏览器断开不必然代表后台任务取消。真实 run 应有服务器持久化状态和独立取消接口；重新连接后先读当前快照，再消费后续事件。可用递增事件 id 去重和续传，但服务器必须实际保存、处理相应历史，只有写 `id:` 并不能自动恢复业务。
+## 5. JavaScript异步不等于多线程执行
 
-代理可能缓冲流，部署后需验证到达时间；长时间无消息可用注释心跳维持连接。输出 Markdown 或 HTML 时仍须防止不可信内容执行，不能因为是模型输出就信任。
+`await`等待I/O时，可以把执行机会让给其他请求；它不会自动把大量CPU计算移到另一个线程。若在请求处理或定时器里运行很久的同步循环，进度推送、取消请求和心跳也可能被阻塞。
 
+本实验定时器只更新少量内存字段，用于学习通信。真实耗时计算应按需要交给工作线程、子进程或独立工作进程；任务执行者与连接处理者通过持久状态或消息机制协作。
+
+## 6. 同时管理三种状态
+
+| 状态 | 例子 | 谁决定 |
+|---|---|---|
+| 任务状态 | RUNNING、COMPLETED、CANCELLED、FAILED | 服务端任务执行规则 |
+| 连接状态 | 连接中、已连接、重连中、已停止 | EventSource与页面订阅逻辑 |
+| 消费位置 | 本页面已处理到事件#4 | 客户端游标及服务端历史 |
+
+收到HTTP200只说明订阅请求被接受；收到`done`也只说明本次应用事件流结束。最终究竟完成、取消还是失败，要看事件或快照中的业务状态。
+
+断开网络时，页面可能仍显示最后收到的RUNNING。应明确它是已有快照，允许重新查询，而不能凭连接失败把服务端任务直接标成FAILED。
+
+## 7. 什么才是可靠的实时反馈
+
+先确保正常路径：创建一次任务，收到有序进度，读取终态并关闭订阅。再验证失败：断开后任务继续；重新订阅不重复创建；明确取消后停止推进；历史过期后恢复当前状态而不伪造完整日志。
+
+事件编号在本实验中只在同一个任务内递增。不能把另一个任务的#3当成本任务已收到的#3，也不能只写一个`id:`就宣称支持断点恢复。服务器必须实际保存足够历史并按游标查询。
+
+## 8. 与安全、测试和AI应用衔接
+
+受保护的事件接口同样需要认证与对象授权。正式接入案例库时，创建、快照、订阅、取消四个入口都要检查身份；长连接还需考虑会话失效后的再次校验。不要把长期访问令牌写进URL来绕过原生EventSource的请求头限制。
+
+第十讲继续为这些承诺选择测试层级，第十三讲再把模拟任务替换为模型调用。模型的流式输出是数据来源之一，SSE是把事件送到网页的方式；二者不能混为一谈。
 
 ## 自检与参考答案
 
-**问题：** 用户关掉标签页后，能否直接把 run 标成 COMPLETED？
+<details><summary>页面要发送“取消”操作，是否只能用WebSocket？</summary><p>不是。可以用POST取消、用SSE观察状态。选择协议取决于消息方向、频率、延迟和运维要求。</p></details>
 
-<details><summary>完成思考后查看参考答案</summary>
+<details><summary>用户关闭标签页后，任务应该自动变成COMPLETED吗？</summary><p>不应该。连接结束不是任务执行结果。是否取消需要明确契约，完成状态由服务端执行者确认。</p></details>
 
-不能。连接关闭仅表示订阅结束；任务成功、取消或失败由服务器执行结果决定。需要明确的取消语义和状态查询。
+<details><summary>HTTP200且收到done，可以显示“处理成功”吗？</summary><p>还要看业务状态。本实验FAILED和CANCELLED也会发送done，表示本次订阅正常收尾。</p></details>
 
-</details>
+<details><summary>为什么把POST创建任务放在订阅Effect中会有问题？</summary><p>重新订阅、依赖变化或开发检查可能再次运行Effect。创建属于明确的用户操作，订阅只观察已存在的任务。</p></details>
 
 ## 阅读定位
 
-[MDN：使用服务器发送事件](https://developer.mozilla.org/zh-CN/docs/Web/API/Server-sent_events/Using_server-sent_events)。
+★★★★★ [SSE与Express](#/part/9/d)、[React订阅教程](#/part/9/e)和[恢复与取消](#/part/9/f)：结合可运行实验学习。
 
-必读范围是本讲正文；参考材料用于查漏补缺，不要求通读整门外部课程。实践练习与课后练习见本讲后续小节。
+★★★★★ [MDN：使用服务器发送事件](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)：阅读事件流的基本写法；[WHATWG规范](https://html.spec.whatwg.org/multipage/server-sent-events.html)用于核查协议细节。
+
+★★★★☆ [React useEffect](https://react.dev/reference/react/useEffect)：阅读外部系统连接与清理。完整指定阅读、版本与验证边界见[资料导读](labs/realtime-basics/READING_GUIDE.md)。核查日期：2026-10-28。

@@ -1,0 +1,519 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "案例库接口设计实验",
+    "version": "1.0.0",
+    "description": "仅描述labs/express-basics的公开内存API，不适用于course-lab或FastAPI。补全输入输出结构不等于实现认证、权限、幂等或完整边界验证。"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "当前文档服务同源的独立Express实例"
+    }
+  ],
+  "security": [],
+  "tags": [
+    {
+      "name": "cases",
+      "description": "公开本机教学案例，无真实账号或持久化数据"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "getHealth",
+        "summary": "查询实验服务状态",
+        "description": "查询实验服务状态。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "200": {
+            "description": "服务可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        }
+      }
+    },
+    "/api/cases": {
+      "get": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "listCases",
+        "summary": "筛选与分页查询案例",
+        "description": "筛选与分页查询案例。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "200": {
+            "description": "筛选后分页结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaseList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "kw",
+            "in": "query",
+            "description": "可省略；去首尾空白；重复的已知键会被拒绝。未知查询键被忽略。",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "industry",
+            "in": "query",
+            "description": "可省略；去首尾空白；重复的已知键会被拒绝。未知查询键被忽略。",
+            "schema": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          {
+            "name": "difficulty",
+            "in": "query",
+            "description": "可省略；去首尾空白；重复的已知键会被拒绝。未知查询键被忽略。",
+            "schema": {
+              "type": "string",
+              "default": "",
+              "enum": [
+                "",
+                "beginner",
+                "intermediate",
+                "advanced"
+              ]
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "十进制非负整数字符串，由服务器解析；不接受小数。",
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 100000
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "十进制非负整数字符串，由服务器解析；不接受小数。",
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "createCase",
+        "summary": "创建案例",
+        "description": "创建案例。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "201": {
+            "description": "创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Case"
+                }
+              }
+            },
+            "headers": {
+              "Location": {
+                "description": "新资源的相对路径",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/Unsupported"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseInput"
+              },
+              "example": {
+                "title": "链路中断",
+                "industry": "通信",
+                "difficulty": "beginner"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cases/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "从创建或列表结果取得的案例编号；未知编号404。",
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "getCase",
+        "summary": "读取一个案例",
+        "description": "读取一个案例。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "200": {
+            "description": "案例内容",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Case"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "updateCase",
+        "summary": "局部更新一个案例",
+        "description": "局部更新一个案例。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "200": {
+            "description": "已更新；未提交的字段保留",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Case"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/Unsupported"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CasePatch"
+              },
+              "example": {
+                "title": "链路恢复"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "cases"
+        ],
+        "operationId": "deleteCase",
+        "summary": "删除一个案例",
+        "description": "删除一个案例。以本课程Express入门实验为实现依据。",
+        "responses": {
+          "204": {
+            "description": "删除成功，无响应体"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/Internal"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CaseInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "industry",
+          "difficulty"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过100。未用maxLength冒充相同计数规则。"
+          },
+          "industry": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过50。"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          }
+        }
+      },
+      "CasePatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "title": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过100。未用maxLength冒充相同计数规则。"
+          },
+          "industry": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过50。"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          }
+        }
+      },
+      "Case": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "industry",
+          "difficulty"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过100。未用maxLength冒充相同计数规则。"
+          },
+          "industry": {
+            "type": "string",
+            "pattern": "\\S",
+            "description": "去首尾空白后非空且JavaScript UTF-16长度不超过50。"
+          },
+          "difficulty": {
+            "type": "string",
+            "enum": [
+              "beginner",
+              "intermediate",
+              "advanced"
+            ]
+          }
+        }
+      },
+      "CaseList": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Case"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        }
+      },
+      "Health": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "storage"
+        ],
+        "properties": {
+          "status": {
+            "const": "ok",
+            "type": "string"
+          },
+          "storage": {
+            "const": "memory",
+            "type": "string"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "message",
+              "requestId"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "requestId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "JSON语法或字段/查询校验失败",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "TooLarge": {
+        "description": "请求体超过32KB",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Unsupported": {
+        "description": "需要application/json",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "案例不存在",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "Internal": {
+        "description": "未预期的服务错误",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

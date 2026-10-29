@@ -1,0 +1,39 @@
+@base = http://127.0.0.1:3002
+# 创建后将响应id复制到这里
+@caseId = replace-with-created-id
+
+### 健康
+GET {{base}}/api/health
+
+### 创建
+POST {{base}}/api/cases
+Content-Type: application/json
+
+{"title":"链路中断","industry":"通信","difficulty":"beginner"}
+
+### 组合筛选与分页
+GET {{base}}/api/cases?industry=通信&difficulty=beginner&offset=0&limit=1
+
+### 详情
+GET {{base}}/api/cases/{{caseId}}
+
+### 局部更新
+PATCH {{base}}/api/cases/{{caseId}}
+Content-Type: application/json
+
+{"title":"链路恢复"}
+
+### 拒绝空白标题
+POST {{base}}/api/cases
+Content-Type: application/json
+
+{"title":" ","industry":"通信","difficulty":"beginner"}
+
+### 坏JSON
+POST {{base}}/api/cases
+Content-Type: application/json
+
+{
+
+### 删除
+DELETE {{base}}/api/cases/{{caseId}}

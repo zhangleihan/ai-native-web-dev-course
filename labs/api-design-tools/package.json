@@ -1,0 +1,27 @@
+{
+  "name": "case-api-design-tools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.18"
+  },
+  "scripts": {
+    "start": "node scripts/server.mjs",
+    "lint": "redocly lint openapi.json",
+    "types": "openapi-typescript openapi.json -o generated/api.d.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "contract": "node scripts/check-contract.mjs",
+    "check": "npm run lint && npm run types && npm run typecheck && npm run contract"
+  },
+  "dependencies": {
+    "swagger-ui-dist": "5.34.0"
+  },
+  "devDependencies": {
+    "@redocly/cli": "1.34.5",
+    "openapi-typescript": "7.6.1",
+    "typescript": "5.8.3",
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1"
+  }
+}

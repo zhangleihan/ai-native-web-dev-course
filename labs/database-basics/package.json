@@ -1,0 +1,6 @@
+{
+  "name":"case-database-basics", "version":"1.0.0", "private":true, "type":"module",
+  "engines":{"node":">=20.18"},
+  "scripts":{"start":"node server/start.mjs","migrate":"node scripts/migrate.mjs","seed":"node scripts/seed.mjs","sql":"node scripts/query.mjs","test":"node --test --test-concurrency=1 tests/*.test.mjs"},
+  "dependencies":{"@electric-sql/pglite":"^0.3.16","express":"5.3.0","pg":"^8.23.1"}
+}

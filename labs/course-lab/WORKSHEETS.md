@@ -48,3 +48,11 @@
 | 容器启动但浏览器访问失败 | HOST=0.0.0.0、端口发布、db健康与启动日志 |
 | SSE没有持续token输出 | 此实验推送trace/状态，未连接真实模型token流 |
 | 重启数据丢失 | health显示memory还是postgres；数据库卷是否保留 |
+
+## 第9讲独立实时任务对照
+
+完整的创建、快照、订阅、取消与历史缺口练习位于相邻realtime-basics，按其README独立启动。原course-lab保持审批trace业务：done可能表示终态，也可能只是30秒订阅期限到达；现有decision拒绝不是通用任务cancel。对照时不要把模拟轨迹称为模型token流，也不要把订阅结束直接写成任务完成。
+
+## 第7讲独立联调对照
+
+相邻integration-basics提供请求错误、竞态与表单的完整基础案例。按其README启动3031/3030，或在其目录运行demo/check。它复用公开Express入门契约且没有账号；course-lab自身Cookie/CSRF请求逻辑保留，不能用无账号客户端直接替代。对照时分别记录读取失败、创建已确认与列表刷新失败，不把响应中断当作写入未发生。

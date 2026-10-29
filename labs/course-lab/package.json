@@ -13,7 +13,11 @@
     "migrate": "node scripts/migrate.mjs",
     "seed": "node scripts/seed.mjs",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
-    "check": "npm test && npm run build"
+    "check": "npm test && npm run build",
+    "test:security": "node --test --test-concurrency=1 tests/auth-boundaries.test.mjs",
+    "security:probe": "node --env-file=.env ../security-basics/probe.mjs",
+    "security:demo": "node scripts/security-demo.mjs",
+    "security:demo:auto": "node scripts/security-demo.mjs --auto --report"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

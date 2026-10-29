@@ -1,0 +1,294 @@
+{
+  "title": "第8讲：同一套API的身份与权限边界",
+  "generatedAt": "2026-10-28T09:12:13.420Z",
+  "mode": "独立内存服务；随机本机端口；每次重新准备数据",
+  "sceneCount": 9,
+  "boundary": "真实HTTP和内存数据验证；不模拟浏览器SameSite/CORS，不代表生产HTTPS或持久化验证",
+  "scenes": [
+    {
+      "number": 1,
+      "title": "有CSRF也不等于已登录",
+      "question": "匿名请求具备有效CSRF，能创建案例吗？",
+      "requests": [
+        {
+          "method": "GET",
+          "path": "/api/session",
+          "status": 200,
+          "expected": 200,
+          "errorCode": null
+        },
+        {
+          "method": "POST",
+          "path": "/api/cases",
+          "status": 401,
+          "expected": 401,
+          "errorCode": "UNAUTHENTICATED"
+        }
+      ],
+      "evidence": {
+        "user": null,
+        "csrfPrepared": true,
+        "countBefore": 2,
+        "countAfter": 2
+      },
+      "conclusion": "CSRF是写请求防护，不是身份；匿名创建401且案例数量未变。",
+      "passed": true
+    },
+    {
+      "number": 2,
+      "title": "登录建立新的会话",
+      "question": "登录前的匿名Cookie会不会一起获得登录权限？",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/login",
+          "status": 200,
+          "expected": 200,
+          "errorCode": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/runs（旧匿名Cookie）",
+          "status": 401,
+          "expected": 401,
+          "errorCode": "UNAUTHENTICATED"
+        }
+      ],
+      "evidence": {
+        "user": {
+          "id": "10000000-0000-4000-8000-000000000001",
+          "username": "alice",
+          "role": "student"
+        },
+        "cookieRotated": true,
+        "csrfRotated": true,
+        "httpOnly": true,
+        "sameSiteLax": true
+      },
+      "conclusion": "登录轮换会话与CSRF，旧匿名Cookie不能访问受保护运行。",
+      "passed": true
+    },
+    {
+      "number": 3,
+      "title": "本人可以创建与修改",
+      "question": "如果把所有写入都拒绝，也算授权正确吗？",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/cases",
+          "status": 201,
+          "expected": 201,
+          "errorCode": null
+        },
+        {
+          "method": "PATCH",
+          "path": "/api/cases/本人案例",
+          "status": 200,
+          "expected": 200,
+          "errorCode": null
+        }
+      ],
+      "evidence": {
+        "before": {
+          "id": "81f2b65e-3cf6-4b08-b669-817e6f1a56ed",
+          "title": "课堂案例：链路中断",
+          "industry": "telecom",
+          "difficulty": "beginner",
+          "ownerId": "10000000-0000-4000-8000-000000000001"
+        },
+        "after": {
+          "id": "81f2b65e-3cf6-4b08-b669-817e6f1a56ed",
+          "title": "课堂案例：已修订",
+          "industry": "telecom",
+          "difficulty": "beginner",
+          "ownerId": "10000000-0000-4000-8000-000000000001"
+        }
+      },
+      "conclusion": "正常路径可完成，后续拒绝才有比较依据。",
+      "passed": true
+    },
+    {
+      "number": 4,
+      "title": "只换编号不能修改他人案例",
+      "question": "保留alice身份和有效CSRF，只把目标换成bob会怎样？",
+      "requests": [
+        {
+          "method": "PATCH",
+          "path": "/api/cases/bob案例",
+          "status": 403,
+          "expected": 403,
+          "errorCode": "FORBIDDEN"
+        }
+      ],
+      "evidence": {
+        "actor": "alice",
+        "before": {
+          "id": "20000000-0000-4000-8000-000000000002",
+          "title": "订单延迟",
+          "industry": "retail",
+          "difficulty": "intermediate",
+          "ownerId": "10000000-0000-4000-8000-000000000002"
+        },
+        "after": {
+          "id": "20000000-0000-4000-8000-000000000002",
+          "title": "订单延迟",
+          "industry": "retail",
+          "difficulty": "intermediate",
+          "ownerId": "10000000-0000-4000-8000-000000000002"
+        },
+        "unchanged": true
+      },
+      "conclusion": "FORBIDDEN且原对象未变，证明对象授权而非仅隐藏按钮。",
+      "passed": true
+    },
+    {
+      "number": 5,
+      "title": "请求体不能自行赋予身份",
+      "question": "提交role=admin和管理员ownerId，会创建管理员案例吗？",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/cases（夹带归属和角色）",
+          "status": 201,
+          "expected": 201,
+          "errorCode": null
+        }
+      ],
+      "evidence": {
+        "submitted": {
+          "ownerId": "10000000-0000-4000-8000-000000000003",
+          "role": "admin"
+        },
+        "saved": {
+          "id": "2673215e-5f57-479c-b9cb-08304174cd13",
+          "title": "课堂案例：伪造归属验证",
+          "industry": "telecom",
+          "difficulty": "beginner",
+          "ownerId": "10000000-0000-4000-8000-000000000001"
+        },
+        "actualRole": "student"
+      },
+      "conclusion": "本实现忽略多余字段，案例仍归alice；201不意味着伪造字段生效。",
+      "passed": true
+    },
+    {
+      "number": 6,
+      "title": "同样是403，拒绝层并不相同",
+      "question": "正确登录后，旧令牌、别人的令牌和错误来源分别会怎样？",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/cases（旧CSRF）",
+          "status": 403,
+          "expected": 403,
+          "errorCode": "CSRF"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cases（另一会话CSRF）",
+          "status": 403,
+          "expected": 403,
+          "errorCode": "CSRF"
+        },
+        {
+          "method": "POST",
+          "path": "/api/cases（错误Origin）",
+          "status": 403,
+          "expected": 403,
+          "errorCode": "ORIGIN"
+        }
+      ],
+      "evidence": {
+        "countBefore": 4,
+        "countAfter": 4,
+        "unchanged": true
+      },
+      "conclusion": "错误码区分CSRF与来源；三次失败均未新增数据，错误Origin仅发往本机API。",
+      "passed": true
+    },
+    {
+      "number": 7,
+      "title": "服务端角色确实参与授权",
+      "question": "同一个bob案例由管理员修改，结果应与alice相同吗？",
+      "requests": [
+        {
+          "method": "PATCH",
+          "path": "/api/cases/bob案例（管理员）",
+          "status": 200,
+          "expected": 200,
+          "errorCode": null
+        }
+      ],
+      "evidence": {
+        "actor": {
+          "id": "10000000-0000-4000-8000-000000000003",
+          "username": "admin",
+          "role": "admin"
+        },
+        "before": {
+          "id": "20000000-0000-4000-8000-000000000002",
+          "title": "订单延迟",
+          "industry": "retail",
+          "difficulty": "intermediate",
+          "ownerId": "10000000-0000-4000-8000-000000000002"
+        },
+        "after": {
+          "id": "20000000-0000-4000-8000-000000000002",
+          "title": "课堂案例：管理员已更新",
+          "industry": "retail",
+          "difficulty": "intermediate",
+          "ownerId": "10000000-0000-4000-8000-000000000002"
+        }
+      },
+      "conclusion": "管理员修改200且归属仍为bob；此处只修改本次独立内存样本。",
+      "passed": true
+    },
+    {
+      "number": 8,
+      "title": "API字符串与网页输出是两层",
+      "question": "标题含HTML标记，保存成功是否表示浏览器应解释它？",
+      "requests": [
+        {
+          "method": "PATCH",
+          "path": "/api/cases/本人案例（文本标题）",
+          "status": 200,
+          "expected": 200,
+          "errorCode": null
+        }
+      ],
+      "evidence": {
+        "savedTitle": "<strong>课堂标记</strong>",
+        "reactMarkup": "<h3>&lt;strong&gt;课堂标记&lt;/strong&gt;</h3>"
+      },
+      "conclusion": "数据库/API保留文本，React文本插值转义；这里验证服务器渲染，不是完整浏览器XSS检查。",
+      "passed": true
+    },
+    {
+      "number": 9,
+      "title": "退出必须让旧凭据失效",
+      "question": "只清空界面够吗？合法退出后保存的Cookie还能使用吗？",
+      "requests": [
+        {
+          "method": "POST",
+          "path": "/api/logout",
+          "status": 204,
+          "expected": 204,
+          "errorCode": null
+        },
+        {
+          "method": "GET",
+          "path": "/api/runs（退出前Cookie）",
+          "status": 401,
+          "expected": 401,
+          "errorCode": "UNAUTHENTICATED"
+        }
+      ],
+      "evidence": {
+        "serverSessionDestroyed": true,
+        "replayedCredentialRejected": true
+      },
+      "conclusion": "服务端注销后，旧Cookie重放401；不是仅清空React状态。",
+      "passed": true
+    }
+  ]
+}

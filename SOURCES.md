@@ -52,3 +52,35 @@ React 官方资料通过 [Learn React](https://react.dev/learn) 核对；本讲�
 教学轮次和提示词根据现有成果重新编写，未发现完整原始生成对话，源目录无可用 Git 历史。源码证据索引见 labs/fde-ui-case/SOURCE_MAP.md。未复制项目全文、后台数据或无关资料；不推定用户项目及截图具有开源再分发许可。
 
 FDE 案例现包含原 web 前端源码与模拟数据的独立副本，位于 labs/fde-ui-case；保留依赖版本与锁文件，未复制原项目其他业务资料、依赖目录或构建缓存。
+
+## 2026-10-28：后端框架基础
+
+第五讲扩充 Express 5 路由、中间件、错误处理与工程组织，补充 FastAPI/Pydantic 请求模型及 Uvicorn 运行方式。依据 Express 与 FastAPI 官方文档重新编写，链接列于各节正文；新建 labs/fastapi-basics 对照实验。
+
+## 2026-10-28：第五讲教材化扩充
+
+依据Helsinki Full Stack Open Part3a/4a的渐进实验与工程结构、Harvard CS50 Web Lecture3 Notes/Slides的HTTP和路由概念、Express5/FastAPI/Pydantic2官方教程及RFC9110/5789，重新编写核心概念、Express分步教程、接口设计调试及FastAPI对照。具体URL、阅读范围、核查日期和使用边界记录在 [资料导读](labs/backend-resources/READING_GUIDE.md)。使用本机FSO离线正文交叉阅读，不修改参考目录。新增Express实验为本课独立实现，未复制第三方完整工程或整套幻灯片。
+
+## 2026-10-28：第六讲数据库扩充
+
+参考PostgreSQL16官方Tutorial、Constraints、Transactions、Isolation与EXPLAIN，Harvard CS50 Web Lecture4 Notes，以及本机Helsinki Full Stack Open Part13a/b/c；应用层依据node-postgres、psycopg与FastAPI官方说明。FSO官方源码已注明关系数据库内容迁移到mooc.fi新入口，旧分节404与新页面正文不可直接抓取情况已记录。具体阅读范围和版权边界见 [数据库资料导读](labs/database-basics/READING_GUIDE.md)。实验以本课案例独立实现，不复制第三方完整工程。
+
+## 2026-10-28：第八讲认证与安全升级
+
+参考Helsinki Full Stack Open Part4c/d、Harvard CS50 Web Lecture8、OWASP认证/授权/会话/密码/CSRF/XSS指南、express-session、MDN浏览器机制及JWT/OAuth/OIDC规范，按本课实际源码重写。来源用途、版本及验证边界见 [安全资料导读](labs/security-basics/READING_GUIDE.md)。新增测试与本机探测脚本独立编写，未转载完整第三方课程或认证项目。
+
+## 2026-10-28：第八讲课堂九幕演示
+
+新增独立编写的演示脚本与教程，复用本课程course-lab和security-basics客户端，不增加第三方课程副本或依赖。概念来源沿用第8讲安全资料导读。demo-example为隔离练习数据的真实执行报告，不包含口令或完整会话凭据；浏览器策略与生产环境验证不在该报告范围内。
+
+## 2026-10-28：第九讲实时Web升级
+
+参考WHATWG SSE规范、MDN SSE/Streams/WebSocket、React useEffect、Node20 HTTP及Nginx官方代理文档，重写概念、接口与生命周期教程。具体阅读范围、事实依据和版权说明见[实时资料导读](labs/realtime-basics/READING_GUIDE.md)。新增React/Express实验、验证代码与课堂任务独立编写，不复制第三方完整工程；没有重复下载Full Stack Open资料。
+
+## 2026-10-29：第5讲OpenAPI与自动化工具
+
+参考OpenAPI3.1.1规范、Swagger UI/Editor、Redocly CLI v1、openapi-typescript、FastAPI元数据、Prism/Spectral官方仓库、OpenAPI Generator和Postman/Apifox官方导入文档。独立编写规范、工具服务与契约检查，复用本课Express案例，不复制第三方完整工程。用途与验证范围见[后端资料导读](labs/backend-resources/READING_GUIDE.md)；依赖保留各自许可，不虚构整套教材的开放许可。
+
+## 2026-10-29：第7讲前后端集成升级
+
+参考Helsinki Full Stack Open Part2c/d、React Effect及事件处理教程、MDN Fetch/AbortController/CORS、Vite官方代理与环境变量说明，重新组织查询、提交与联调教材。来源用途与范围见[资料导读](labs/integration-basics/READING_GUIDE.md)。新增客户端、代理与故障注入独立编写，复用本课Express应用与存储，不复制第三方完整项目，不重复下载FSO资料。

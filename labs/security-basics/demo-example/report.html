@@ -1,0 +1,95 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>第8讲：同一套API的身份与权限边界</title>
+<style>body{margin:0;background:#fff;color:#17212d;font:16px/1.8 system-ui,-apple-system,"PingFang SC",sans-serif}main{max-width:1060px;margin:auto;padding:40px 24px}h1{font-size:30px;line-height:1.4}h2{font-size:22px}header{border-bottom:1px solid #dbe2e8;padding-bottom:24px}.meta,small{color:#536375}.success{color:#187445}section{padding:24px 0;border-bottom:1px solid #e4e8ed}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;border-bottom:1px solid #e4e8ed;padding:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f7f9;padding:16px;border-radius:6px;font-size:14px}.table-wrap{overflow:auto}summary{cursor:pointer}a{color:#235f99}@media print{main{padding:0}section{break-inside:avoid}}</style>
+<main><header><p class="meta">身份认证与Web安全 · 真实执行报告</p><h1>第8讲：同一套API的身份与权限边界</h1><p class="success">9幕全部符合预期。401/403表示被正确拒绝，属于演示成功。</p><p>独立内存服务；随机本机端口；每次重新准备数据</p><small>生成时间：2026/10/28 17:12:13（北京时间）</small></header>
+<section><h2>1. 有CSRF也不等于已登录</h2><p>先预测：匿名请求具备有效CSRF，能创建案例吗？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>GET /api/session</td><td>200</td><td>成功</td><td>200</td></tr><tr><td>POST /api/cases</td><td>401</td><td>UNAUTHENTICATED</td><td>401</td></tr></tbody></table></div><p class="success">CSRF是写请求防护，不是身份；匿名创建401且案例数量未变。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;user&quot;: null,
+  &quot;csrfPrepared&quot;: true,
+  &quot;countBefore&quot;: 2,
+  &quot;countAfter&quot;: 2
+}</pre></details></section><section><h2>2. 登录建立新的会话</h2><p>先预测：登录前的匿名Cookie会不会一起获得登录权限？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>POST /api/login</td><td>200</td><td>成功</td><td>200</td></tr><tr><td>GET /api/runs（旧匿名Cookie）</td><td>401</td><td>UNAUTHENTICATED</td><td>401</td></tr></tbody></table></div><p class="success">登录轮换会话与CSRF，旧匿名Cookie不能访问受保护运行。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;user&quot;: {
+    &quot;id&quot;: &quot;10000000-0000-4000-8000-000000000001&quot;,
+    &quot;username&quot;: &quot;alice&quot;,
+    &quot;role&quot;: &quot;student&quot;
+  },
+  &quot;cookieRotated&quot;: true,
+  &quot;csrfRotated&quot;: true,
+  &quot;httpOnly&quot;: true,
+  &quot;sameSiteLax&quot;: true
+}</pre></details></section><section><h2>3. 本人可以创建与修改</h2><p>先预测：如果把所有写入都拒绝，也算授权正确吗？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>POST /api/cases</td><td>201</td><td>成功</td><td>201</td></tr><tr><td>PATCH /api/cases/本人案例</td><td>200</td><td>成功</td><td>200</td></tr></tbody></table></div><p class="success">正常路径可完成，后续拒绝才有比较依据。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;before&quot;: {
+    &quot;id&quot;: &quot;81f2b65e-3cf6-4b08-b669-817e6f1a56ed&quot;,
+    &quot;title&quot;: &quot;课堂案例：链路中断&quot;,
+    &quot;industry&quot;: &quot;telecom&quot;,
+    &quot;difficulty&quot;: &quot;beginner&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000001&quot;
+  },
+  &quot;after&quot;: {
+    &quot;id&quot;: &quot;81f2b65e-3cf6-4b08-b669-817e6f1a56ed&quot;,
+    &quot;title&quot;: &quot;课堂案例：已修订&quot;,
+    &quot;industry&quot;: &quot;telecom&quot;,
+    &quot;difficulty&quot;: &quot;beginner&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000001&quot;
+  }
+}</pre></details></section><section><h2>4. 只换编号不能修改他人案例</h2><p>先预测：保留alice身份和有效CSRF，只把目标换成bob会怎样？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>PATCH /api/cases/bob案例</td><td>403</td><td>FORBIDDEN</td><td>403</td></tr></tbody></table></div><p class="success">FORBIDDEN且原对象未变，证明对象授权而非仅隐藏按钮。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;actor&quot;: &quot;alice&quot;,
+  &quot;before&quot;: {
+    &quot;id&quot;: &quot;20000000-0000-4000-8000-000000000002&quot;,
+    &quot;title&quot;: &quot;订单延迟&quot;,
+    &quot;industry&quot;: &quot;retail&quot;,
+    &quot;difficulty&quot;: &quot;intermediate&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000002&quot;
+  },
+  &quot;after&quot;: {
+    &quot;id&quot;: &quot;20000000-0000-4000-8000-000000000002&quot;,
+    &quot;title&quot;: &quot;订单延迟&quot;,
+    &quot;industry&quot;: &quot;retail&quot;,
+    &quot;difficulty&quot;: &quot;intermediate&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000002&quot;
+  },
+  &quot;unchanged&quot;: true
+}</pre></details></section><section><h2>5. 请求体不能自行赋予身份</h2><p>先预测：提交role=admin和管理员ownerId，会创建管理员案例吗？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>POST /api/cases（夹带归属和角色）</td><td>201</td><td>成功</td><td>201</td></tr></tbody></table></div><p class="success">本实现忽略多余字段，案例仍归alice；201不意味着伪造字段生效。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;submitted&quot;: {
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000003&quot;,
+    &quot;role&quot;: &quot;admin&quot;
+  },
+  &quot;saved&quot;: {
+    &quot;id&quot;: &quot;2673215e-5f57-479c-b9cb-08304174cd13&quot;,
+    &quot;title&quot;: &quot;课堂案例：伪造归属验证&quot;,
+    &quot;industry&quot;: &quot;telecom&quot;,
+    &quot;difficulty&quot;: &quot;beginner&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000001&quot;
+  },
+  &quot;actualRole&quot;: &quot;student&quot;
+}</pre></details></section><section><h2>6. 同样是403，拒绝层并不相同</h2><p>先预测：正确登录后，旧令牌、别人的令牌和错误来源分别会怎样？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>POST /api/cases（旧CSRF）</td><td>403</td><td>CSRF</td><td>403</td></tr><tr><td>POST /api/cases（另一会话CSRF）</td><td>403</td><td>CSRF</td><td>403</td></tr><tr><td>POST /api/cases（错误Origin）</td><td>403</td><td>ORIGIN</td><td>403</td></tr></tbody></table></div><p class="success">错误码区分CSRF与来源；三次失败均未新增数据，错误Origin仅发往本机API。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;countBefore&quot;: 4,
+  &quot;countAfter&quot;: 4,
+  &quot;unchanged&quot;: true
+}</pre></details></section><section><h2>7. 服务端角色确实参与授权</h2><p>先预测：同一个bob案例由管理员修改，结果应与alice相同吗？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>PATCH /api/cases/bob案例（管理员）</td><td>200</td><td>成功</td><td>200</td></tr></tbody></table></div><p class="success">管理员修改200且归属仍为bob；此处只修改本次独立内存样本。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;actor&quot;: {
+    &quot;id&quot;: &quot;10000000-0000-4000-8000-000000000003&quot;,
+    &quot;username&quot;: &quot;admin&quot;,
+    &quot;role&quot;: &quot;admin&quot;
+  },
+  &quot;before&quot;: {
+    &quot;id&quot;: &quot;20000000-0000-4000-8000-000000000002&quot;,
+    &quot;title&quot;: &quot;订单延迟&quot;,
+    &quot;industry&quot;: &quot;retail&quot;,
+    &quot;difficulty&quot;: &quot;intermediate&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000002&quot;
+  },
+  &quot;after&quot;: {
+    &quot;id&quot;: &quot;20000000-0000-4000-8000-000000000002&quot;,
+    &quot;title&quot;: &quot;课堂案例：管理员已更新&quot;,
+    &quot;industry&quot;: &quot;retail&quot;,
+    &quot;difficulty&quot;: &quot;intermediate&quot;,
+    &quot;ownerId&quot;: &quot;10000000-0000-4000-8000-000000000002&quot;
+  }
+}</pre></details></section><section><h2>8. API字符串与网页输出是两层</h2><p>先预测：标题含HTML标记，保存成功是否表示浏览器应解释它？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>PATCH /api/cases/本人案例（文本标题）</td><td>200</td><td>成功</td><td>200</td></tr></tbody></table></div><p class="success">数据库/API保留文本，React文本插值转义；这里验证服务器渲染，不是完整浏览器XSS检查。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;savedTitle&quot;: &quot;&lt;strong&gt;课堂标记&lt;/strong&gt;&quot;,
+  &quot;reactMarkup&quot;: &quot;&lt;h3&gt;&amp;lt;strong&amp;gt;课堂标记&amp;lt;/strong&amp;gt;&lt;/h3&gt;&quot;
+}</pre></details></section><section><h2>9. 退出必须让旧凭据失效</h2><p>先预测：只清空界面够吗？合法退出后保存的Cookie还能使用吗？</p><div class="table-wrap"><table><thead><tr><th>请求</th><th>实际状态</th><th>错误分类</th><th>预期</th></tr></thead><tbody><tr><td>POST /api/logout</td><td>204</td><td>成功</td><td>204</td></tr><tr><td>GET /api/runs（退出前Cookie）</td><td>401</td><td>UNAUTHENTICATED</td><td>401</td></tr></tbody></table></div><p class="success">服务端注销后，旧Cookie重放401；不是仅清空React状态。</p><details><summary>查看数据与判断证据</summary><pre>{
+  &quot;serverSessionDestroyed&quot;: true,
+  &quot;replayedCredentialRejected&quot;: true
+}</pre></details></section>
+<p class="meta">真实HTTP和内存数据验证；不模拟浏览器SameSite/CORS，不代表生产HTTPS或持久化验证。报告不包含口令、Cookie和CSRF实际值。服务关闭后本次会话失效；再次执行会重新生成报告。</p></main></html>

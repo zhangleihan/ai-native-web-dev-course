@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check generated course, teaching structure and local links without networking."""
+import hashlib
 import json
 import re
 import sys
@@ -11,6 +12,9 @@ def main():
     errors = []
     raw = (ROOT / 'data/course.js').read_text()
     data = json.loads(raw.removeprefix('window.COURSE_DATA = ').strip().removesuffix(';'))
+    version = hashlib.sha256((ROOT / 'data/course.js').read_bytes()).hexdigest()[:12]
+    if f'src="data/course.js?v={version}"' not in (ROOT / 'index.html').read_text():
+        errors.append('index: course data cache version is stale; run build_course.py')
     expected_pages = sum(len(sections_spec(n, title)) for n, _, title in LECTURES)
     if len(data['pages']) != expected_pages: errors.append(f'Expected {expected_pages} pages')
     if sum(p['hours'] for p in data['parts']) != 32: errors.append('Hours must total 32')

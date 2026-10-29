@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,7 +18,7 @@ LECTURES = [
     (2, "Web 与 HTTP 原理", "HTTP GET/POST、状态码与报文头"),
     (3, "现代前端基础", "语义、布局与事件：案例筛选"),
     (4, "React 与组件化", "组件、props、state 与列表的 key"),
-    (5, "后端与 REST API", "REST 资源、Express 与 JSON 契约"),
+    (5, "后端与 REST API", "后端框架、Express 与 REST 契约"),
     (6, "数据库与数据建模", "约束、参数化查询与事务"),
     (7, "前后端集成", "fetch、CORS 与请求生命周期"),
     (8, "身份认证与 Web 安全", "认证、授权、Token 与不能信任的前端"),
@@ -90,6 +92,38 @@ def sections_spec(num: int, key_title: str) -> list[tuple[str, str, str]]:
             ("ai-ui", "g", "AI 氛围编程：系统 UI 原型设计"),
             ("vibe-case", "h", "氛围编程案例：FDE 工作台整体 UI 设计"),
         ])
+    if num == 5:
+        out[1:1] = [
+            ("express", "e", "Express：从第一个请求到完整案例 API"),
+            ("api-design", "f", "接口设计与调试：契约、分页与错误边界"),
+            ("openapi", "g", "OpenAPI与自动化工具：设计、文档与契约验证"),
+            ("fastapi", "d", "FastAPI：参数、模型与工程组织"),
+        ]
+    if num == 6:
+        out[1:1] = [
+            ("sql", "d", "SQL：建表、查询、连接与统计"),
+            ("storage", "e", "应用接入数据库：参数、连接与数据访问层"),
+            ("transactions", "f", "事务、迁移与索引：一致性与查询计划"),
+        ]
+    if num == 7:
+        out[1:1] = [
+            ("fetch", "d", "请求封装与契约：HTTP、错误与数据检查"),
+            ("react", "e", "React联调：查询、竞态与表单提交"),
+            ("cors", "f", "代理、CORS与联调：定位跨层问题"),
+        ]
+    if num == 8:
+        out[1:1] = [
+            ("sessions", "d", "登录、会话与令牌：认证与失效过程"),
+            ("authorization", "e", "资源授权：所有权、角色与负向验证"),
+            ("browser-security", "f", "浏览器安全：XSS、CSRF与跨源边界"),
+            ("demo", "g", "综合演示：身份、权限与拒绝结果"),
+        ]
+    if num == 9:
+        out[1:1] = [
+            ("sse", "d", "SSE与Express：从报文到任务接口"),
+            ("client", "e", "React订阅：连接、状态与事件去重"),
+            ("reliability", "f", "恢复、取消与部署：连接之外的可靠性"),
+        ]
     return out
 
 
@@ -118,6 +152,16 @@ def main() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     js = "window.COURSE_DATA = " + json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c") + ";\n"
     (DATA_DIR / "course.js").write_text(js, encoding="utf-8")
+    # A new payload gets a new URL, so browsers do not reuse older course data.
+    index_path = ROOT / "index.html"
+    index = index_path.read_text(encoding="utf-8")
+    version = hashlib.sha256(js.encode("utf-8")).hexdigest()[:12]
+    updated, count = re.subn(r'(?<=src=")data/course\.js(?:\?[^"]*)?(?=")',
+                             f"data/course.js?v={version}", index)
+    if count != 1:
+        raise ValueError("index.html must load data/course.js exactly once")
+    if updated != index:
+        index_path.write_text(updated, encoding="utf-8")
     print(f"wrote {len(pages)} pages -> {DATA_DIR / 'course.js'}")
 
 

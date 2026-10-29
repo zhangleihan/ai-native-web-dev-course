@@ -13,7 +13,7 @@ cd ai-native-web-dev-course
 
 教材是静态站点，不需要启动 FDE 或购买模型服务。应用实验另行启动，见 [服务启动说明.md](服务启动说明.md)。浏览器打印可导出当前小节；正文自检答案可展开，打印时包含答案。
 
-编辑 `markdown/NN-*.md` 后执行 `python3 scripts/build_course.py`，生成 `data/course.js`。修改生成文件不能持久保留，请修改 Markdown 源。运行 `python3 scripts/check_course.py` 检查学时、章节、资源与生成一致性。
+编辑 `markdown/NN-*.md` 后执行 `python3 scripts/build_course.py`，生成 `data/course.js`。修改生成文件不能持久保留，请修改 Markdown 源。构建时会自动更新数据文件的缓存版本；已打开的浏览器标签仍需重新加载一次，切换章节不会重新读取数据。运行 `python3 scripts/check_course.py` 检查学时、章节、资源与生成一致性。
 
 ## 配套实验
 
@@ -42,3 +42,27 @@ cd ai-native-web-dev-course
 ## FDE 原型案例
 
 案例源项目为 `FDE-Workspace`，完整可运行前端已复制到课程中。从本课程根目录执行 `cd labs/fde-ui-case`、`npm ci`、`npm run dev`，打开 http://127.0.0.1:3100。课程配套的需求、提示词与检查表见 [FDE UI 案例资料](labs/fde-ui-case/README.md)。
+
+## 后端与 REST API
+
+第五讲按“概念与契约—Express分步教程—接口设计与调试—FastAPI对照”展开，参考Full Stack Open与CS50 Web公开课程。入门实验见 [Express案例API](labs/express-basics/README.md) 和 [FastAPI基础实验](labs/fastapi-basics/README.md)；完整 [资料导读](labs/backend-resources/READING_GUIDE.md) 指定必读章节、用途与版本差异。
+
+## 数据库与数据建模
+
+第六讲增加SQL分步教程、应用接入、事务/迁移/索引三个网页小节，主节补充关系建模、规范化、类型、NULL和约束。配套 [数据库实验](labs/database-basics/README.md) 默认使用文件型PGlite，无需Docker；支持PostgreSQL服务配置，验证范围分别记录。
+
+## 身份认证与Web安全
+
+第8讲扩充登录会话、Cookie/JWT、资源授权与浏览器安全三个小节，结合现有course-lab追踪真实身份流。配套 [安全实验](labs/security-basics/README.md) 提供权限矩阵、探测脚本、9项新增边界测试和官方阅读定位；浏览器策略与服务端请求验证分别记录。
+
+第8讲新增[九幕课堂演示](markdown/08-demo.md)（网页路由 `#/part/8/g`）：从匿名请求到退出后的旧凭据重放，逐幕预测并观察真实状态与数据变化。在labs/course-lab执行 `npm run security:demo`；自动生成网页报告用 `npm run security:demo:auto`。无需.env或数据库，每次独立重置。可直接查看[实际示例报告](labs/security-basics/demo-example/report.html)。
+
+## 实时Web应用
+
+第9讲按通信方式选择、SSE报文与接口、React订阅、恢复与取消展开，新增网页小节9/d、9/e、9/f。配套[实时任务实验](labs/realtime-basics/README.md)提供白底React页面、Express事件流、有限历史、快照与取消，以及6组自动演示。默认本机3009，无需账号、数据库或模型服务；运行后可区分任务状态、连接状态和事件位置。
+
+第5讲新增[OpenAPI与接口自动化](markdown/05-openapi.md)（网页路由 `#/part/5/g`），介绍设计先行、代码先行、Swagger、Redocly、Prism、类型/SDK生成及协作工具。配套[API设计工具实验](labs/api-design-tools/README.md)复用Express实现，提供本机3020交互文档、规范检查、TypeScript类型生成和真实响应契约检查。
+
+## 前后端集成
+
+第7讲重写查询与提交主线，新增7/d请求封装、7/e React联调、7/f代理与CORS专题。配套[联调实验](labs/integration-basics/README.md)提供筛选/分页、创建确认、竞态保护与固定故障注入。默认3031页面代理到3030独立API，无账号或数据库；`npm run demo`验证6组对照，不修改其他运行中实验的数据。

@@ -1,0 +1,5 @@
+extends:
+  - recommended
+rules:
+  # 本机入门实验未声明整套课程材料的再分发许可，不虚构许可对象。
+  info-license: off
